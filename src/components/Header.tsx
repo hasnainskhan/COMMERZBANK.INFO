@@ -90,12 +90,12 @@ const Header: React.FC = () => {
         <div className="header-container">
           <div className="branding-section">
             <a href="https://www.commerzbank.de/" target="_blank" rel="noopener noreferrer" className="logo" style={{ textDecoration: 'none' }}>
-              <span className="logo-text">COMMERZBANK</span>
               <img 
                 src="/commerz.png" 
                 alt="Commerz Logo" 
                 className="logo-image"
               />
+              <span className="logo-text">COMMERZBANK</span>
             </a>
             <button className="hamburger-menu" onClick={toggleMenu}>
               <div className="hamburger-line"></div>

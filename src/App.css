@@ -3514,10 +3514,23 @@ input[type="button"] {
   }
 }
 
-/* Ensure header navigation is always visible */
+/* Ensure header navigation is visible on desktop only */
 .header-navigation {
   display: block !important;
   padding: 8px 0 !important;
+}
+
+@media (max-width: 768px) {
+  .header-navigation {
+    display: none !important;
+  }
+  
+  .logo-text {
+    display: block !important;
+    visibility: visible !important;
+    color: white !important;
+    font-size: 32px !important;
+  }
 }
 
 .main-navigation {

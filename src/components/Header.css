@@ -306,32 +306,134 @@
   }
 }
 
+/* Mobile Header Styles - Logo Only */
+.mobile-header {
+  display: none;
+  background-color: #002e3c;
+  padding: 15px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.mobile-header-container {
+  max-width: 100%;
+  margin: 0 auto;
+  padding: 0 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center; /* Center the logo horizontally */
+}
+
+.mobile-logo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-decoration: none;
+}
+
+.mobile-logo-image {
+  height: 60px;
+  width: auto;
+  object-fit: contain;
+}
+
+.mobile-logo-text {
+  font-size: 24px;
+  font-weight: bold;
+  color: white;
+  letter-spacing: 1px;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  /* Set header height to 10vh */
+  .header {
+    height: 10vh;
+  }
+
+  /* Hide all header sections except the logo */
+  .header-top,
+  .header-navigation {
+    display: none !important;
+  }
+
+  /* Hide elements within header-main except logo */
+  .customer-type-section,
+  .hamburger-menu,
+  .search-section,
+  .search-form,
+  .utility-links,
+  .language-select,
+  .main-navigation,
+  .mobile-main-navigation,
+  .utility-link,
+  .nav-link,
+  .mobile-utility-link,
+  .mobile-nav-link,
+  .separator {
+    display: none !important;
+  }
+
+  /* Show only the logo section */
+  .branding-section {
+    display: flex !important;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+  }
+
+  /* Center the logo horizontally */
+  .logo {
+    justify-content: center;
+  }
+
+  .header-container {
+    justify-content: center;
+    align-items: center;
+    padding: 10px 20px;
+    height: 100%;
+  }
+
+  .header-main {
+    padding: 0;
+    display: flex;
+    align-items: center;
+    height: 100%;
+  }
+
+  /* Increase logo size for mobile */
+  .logo-image {
+    height: 90px;
+  }
+
+  .logo-text {
+    font-size: 32px;
+    color: white !important;
+    font-weight: bold !important;
+    display: block !important;
+    visibility: visible !important;
+  }
+
+  /* Ensure only logo is visible */
+  .header-main .header-container > *:not(.branding-section) {
+    display: none !important;
+  }
+
+  /* Hide any remaining links except logo link */
+  .header a:not(.logo) {
+    display: none !important;
+  }
+}
+
 @media (max-width: 480px) {
   .header-container {
-    padding: 0 10px;
+    padding: 5px 15px;
   }
   
   .logo-image {
-    height: 50px;
+    height: 80px;
   }
   
   .logo-text {
-    font-size: 20px;
-  }
-  
-  .search-form {
-    min-width: 120px;
-  }
-  
-  .utility-links {
-    font-size: 12px;
-  }
-  
-  .main-navigation {
-    font-size: 12px;
-  }
-  
-  .nav-link {
-    padding: 6px 8px;
+    font-size: 28px;
   }
 }
