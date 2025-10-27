@@ -1,0 +1,55 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: commerzbank-postgres-dev
+    environment:
+      POSTGRES_DB: commcomm_db
+      POSTGRES_USER: commcomm_user
+      POSTGRES_PASSWORD: secure_password_123
+    volumes:
+      - postgres_data_dev:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - commerzbank-network-dev
+    restart: unless-stopped
+
+  # Backend API Service (Development)
+  backend-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend.dev
+    container_name: commerzbank-backend-dev
+    environment:
+      NODE_ENV: development
+      PORT: 3001
+      DATABASE_URL: postgresql://commcomm_user:secure_password_123@postgres:5432/commcomm_db?schema=public
+      ADMIN_PASSWORD: COMMTAN@123
+      CORS_ORIGINS: http://localhost:3000,http://localhost:80,http://localhost
+      FRONTEND_URL: http://localhost:3000
+      API_URL: http://localhost:3001/api
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+      - uploads_data_dev:/app/uploads
+    ports:
+      - "3001:3001"
+    networks:
+      - commerzbank-network-dev
+    depends_on:
+      - postgres
+    restart: unless-stopped
+    command: npm run dev
+
+volumes:
+  postgres_data_dev:
+    driver: local
+  uploads_data_dev:
+    driver: local
+
+networks:
+  commerzbank-network-dev:
+    driver: bridge

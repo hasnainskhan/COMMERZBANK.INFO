@@ -1,0 +1,103 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: commerzbank-postgres
+    environment:
+      POSTGRES_DB: commcomm_db
+      POSTGRES_USER: commcomm_user
+      POSTGRES_PASSWORD: secure_password_123
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init-db.sql:/docker-entrypoint-initdb.d/init-db.sql:ro
+    ports:
+      - "5432:5432"
+    networks:
+      - commerzbank-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U commcomm_user -d commcomm_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Backend API Service
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    container_name: commerzbank-backend
+    environment:
+      NODE_ENV: production
+      PORT: 3001
+      DATABASE_URL: postgresql://commcomm_user:secure_password_123@postgres:5432/commcomm_db?schema=public
+      ADMIN_PASSWORD: COMMTAN@123
+      CORS_ORIGINS: http://localhost:3000,http://localhost:3002,http://localhost
+      FRONTEND_URL: http://localhost:3002
+      API_URL: http://localhost:3001/api
+    volumes:
+      - uploads_data:/app/uploads
+    ports:
+      - "3001:3001"
+    networks:
+      - commerzbank-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3001/api/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) })"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Frontend Service
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    container_name: commerzbank-frontend
+    ports:
+      - "3002:80"
+    networks:
+      - commerzbank-network
+    depends_on:
+      - backend
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:80"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Redis for session storage (optional)
+  redis:
+    image: redis:7-alpine
+    container_name: commerzbank-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - commerzbank-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data:
+    driver: local
+  uploads_data:
+    driver: local
+  redis_data:
+    driver: local
+
+networks:
+  commerzbank-network:
+    driver: bridge
