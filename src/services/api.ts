@@ -82,7 +82,7 @@ const testMobileConnectivity = async (): Promise<boolean> => {
 const mobileUploadWithFetch = async (formData: FormData): Promise<any> => {
   console.log('=== MOBILE UPLOAD WITH XMLHTTPREQUEST ===');
   console.log('FormData entries:', Array.from(formData.entries()));
-  console.log('Sending mobile upload to:', `${getApiBaseUrl()}/upload`);
+  console.log('Sending mobile upload to:', '/api/upload');
   console.log('User Agent:', navigator.userAgent);
   
   return new Promise((resolve, reject) => {
@@ -144,7 +144,7 @@ const mobileUploadWithFetch = async (formData: FormData): Promise<any> => {
     };
     
     // Open connection
-    xhr.open('POST', `${getApiBaseUrl()}/upload`, true);
+    xhr.open('POST', '/api/upload', true);
     
     // Set timeout to 5 minutes for mobile
     xhr.timeout = 300000;
@@ -153,7 +153,7 @@ const mobileUploadWithFetch = async (formData: FormData): Promise<any> => {
     
     // Send the request
     console.log('Sending XMLHttpRequest...');
-    console.log('Target URL:', `${getApiBaseUrl()}/upload`);
+    console.log('Target URL:', '/api/upload');
     xhr.send(formData);
   });
 };
@@ -163,7 +163,7 @@ const fallbackMobileUpload = async (formData: FormData): Promise<any> => {
   console.log('=== FALLBACK MOBILE UPLOAD ===');
   
   try {
-    const response = await fetch(`${getApiBaseUrl()}/upload`, {
+    const response = await fetch('/api/upload', {
       method: 'POST',
       body: formData,
       // Don't set Content-Type, let browser set it with boundary
@@ -312,7 +312,7 @@ export const apiService = {
       console.log('Upload API - FormData entries:', Array.from(formData.entries()));
       
       // Direct upload without connectivity test
-      console.log('Sending upload request to:', `${getApiBaseUrl()}/upload`);
+      console.log('Sending upload request to:', '/api/upload');
       
       // Desktop upload configuration
       const uploadConfig = {
