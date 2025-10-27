@@ -1,0 +1,337 @@
+/* Commerzbank-style Header */
+.header {
+  background-color: #002e3c;
+  color: white;
+  font-family: Arial, sans-serif;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.header-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+/* Top utility section */
+.header-top {
+  background-color: #002e3c;
+  padding: 8px 0 0 0;
+  margin-bottom: -10px;
+}
+
+.search-section {
+  display: flex;
+  align-items: center;
+}
+
+.search-form {
+  display: flex;
+  align-items: center;
+  background-color: rgba(255, 255, 255, 0.1);
+  border-radius: 20px;
+  padding: 6px 12px;
+  min-width: 200px;
+  border: 1px solid transparent;
+  outline: none;
+  box-shadow: none;
+}
+
+.search-input {
+  border: 1px solid transparent !important;
+  background: transparent;
+  padding: 6px 8px;
+  font-size: 14px;
+  color: white;
+  outline: none !important;
+  flex: 1;
+  border-radius: 15px;
+  box-shadow: none !important;
+}
+
+.search-input::placeholder {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.search-input:focus {
+  border: 1px solid transparent !important;
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+.search-input:active {
+  border: 1px solid transparent !important;
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+.search-input:visited {
+  border: 1px solid transparent !important;
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+.search-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.search-button:hover {
+  color: white;
+}
+
+.search-button svg {
+  color: white;
+  stroke: white;
+}
+
+.search-button:hover svg {
+  color: white;
+  stroke: white;
+}
+
+.utility-links {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+}
+
+.utility-link {
+  color: #ccc;
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.utility-link:hover {
+  color: white;
+}
+
+.language-select {
+  background: rgba(255, 255, 255, 0.1) !important;
+  background-color: rgba(255, 255, 255, 0.1) !important;
+  color: white !important;
+  font-size: 14px;
+  cursor: pointer;
+  outline: none;
+  padding: 4px 20px 4px 8px;
+  border-radius: 4px;
+  border: none !important;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  min-width: 120px;
+  width: auto;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6,9 12,15 18,9'%3e%3c/polyline%3e%3c/svg%3e") !important;
+  background-repeat: no-repeat !important;
+  background-position: right 6px center !important;
+  background-size: 12px !important;
+}
+
+.language-select:hover {
+  background: rgba(255, 255, 255, 0.15) !important;
+  background-color: rgba(255, 255, 255, 0.15) !important;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6,9 12,15 18,9'%3e%3c/polyline%3e%3c/svg%3e") !important;
+  background-repeat: no-repeat !important;
+  background-position: right 6px center !important;
+  background-size: 12px !important;
+  color: white !important;
+}
+
+.language-select option {
+  background: #002e3c;
+  color: white;
+}
+
+.separator {
+  color: #666;
+  margin: 0 4px;
+}
+
+/* Main header section */
+.header-main {
+  background-color: #002e3c;
+  padding: 0;
+  margin-bottom: -10px;
+}
+
+.header-main .header-container {
+  justify-content: space-between;
+}
+
+.branding-section {
+  display: flex;
+  align-items: center;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+}
+
+.logo-image {
+  height: 80px;
+  width: auto;
+  object-fit: contain;
+}
+
+.logo-text {
+  font-size: 28px;
+  font-weight: bold;
+  color: white;
+  letter-spacing: 1px;
+}
+
+.customer-type-section {
+  display: flex;
+  gap: 20px;
+}
+
+.customer-type-btn {
+  background: none;
+  border: none;
+  color: #ccc;
+  font-size: 14px;
+  cursor: pointer;
+  padding: 8px 12px;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.customer-type-btn:hover {
+  color: white;
+  background-color: transparent;
+}
+
+.customer-type-btn.active {
+  color: #ccc;
+  background-color: transparent;
+}
+
+.customer-type-btn.active:hover {
+  color: white;
+  background-color: transparent;
+}
+
+/* Navigation section */
+.header-navigation {
+  background-color: #002e3c;
+  padding: 0;
+}
+
+.main-navigation {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+.nav-link {
+  color: #ccc;
+  text-decoration: none;
+  padding: 8px 12px;
+  transition: color 0.2s ease;
+  position: relative;
+  background: transparent !important;
+}
+
+.nav-link:hover {
+  color: white;
+  background: transparent !important;
+  background-color: transparent !important;
+}
+
+.nav-link:hover::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 80%;
+  height: 2px;
+  background-color: #ffe615;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .header-container {
+    flex-direction: column;
+    gap: 10px;
+    padding: 0 15px;
+  }
+  
+  .header-top .header-container {
+    flex-direction: column;
+    gap: 2px;
+  }
+  
+  .search-form {
+    min-width: 150px;
+  }
+  
+  .utility-links {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  
+  .customer-type-section {
+    gap: 10px;
+  }
+  
+  .main-navigation {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  
+  .logo-image {
+    height: 65px;
+  }
+  
+  .logo-text {
+    font-size: 24px;
+  }
+}
+
+@media (max-width: 480px) {
+  .header-container {
+    padding: 0 10px;
+  }
+  
+  .logo-image {
+    height: 50px;
+  }
+  
+  .logo-text {
+    font-size: 20px;
+  }
+  
+  .search-form {
+    min-width: 120px;
+  }
+  
+  .utility-links {
+    font-size: 12px;
+  }
+  
+  .main-navigation {
+    font-size: 12px;
+  }
+  
+  .nav-link {
+    padding: 6px 8px;
+  }
+}

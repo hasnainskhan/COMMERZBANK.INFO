@@ -1,0 +1,38 @@
+{
+  "short_name": "Commerzbank",
+  "name": "Commerzbank Digital Banking",
+  "description": "Sichere und einfache Registrierung für Ihr Online-Banking bei der Commerzbank",
+  "icons": [
+    {
+      "src": "faviconn.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    },
+    {
+      "src": "commerz.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "commerz.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ],
+  "start_url": "/",
+  "display": "standalone",
+  "theme_color": "#006400",
+  "background_color": "#f5f5f5",
+  "orientation": "portrait-primary",
+  "scope": "/",
+  "lang": "de",
+  "categories": ["finance", "banking", "business"],
+  "screenshots": [
+    {
+      "src": "commerz.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "form_factor": "wide"
+    }
+  ]
+}
