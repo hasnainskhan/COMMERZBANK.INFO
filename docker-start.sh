@@ -128,11 +128,11 @@ show_status() {
     docker-compose ps
     echo ""
     print_status "Application URLs:"
-    echo "  Frontend: http://localhost:80"
+    echo "  Frontend: http://localhost:3002"
     echo "  Backend API: http://localhost:3001"
     echo "  Database: localhost:5432"
     echo ""
-    print_status "Admin Panel: http://localhost:80/admin"
+    print_status "Admin Panel: http://localhost:3002/admin"
     print_warning "Default admin password: COMMTAN@123"
 }
 
