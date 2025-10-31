@@ -38,7 +38,14 @@ check_docker() {
         exit 1
     fi
     
-    if ! command -v docker-compose &> /dev/null; then
+    # Check for docker compose v2 first, then fallback to docker-compose v1
+    if command -v docker &> /dev/null && docker compose version &> /dev/null; then
+        DOCKER_COMPOSE_CMD="docker compose"
+        print_status "Using Docker Compose v2"
+    elif command -v docker-compose &> /dev/null; then
+        DOCKER_COMPOSE_CMD="docker-compose"
+        print_warning "Using Docker Compose v1 (consider upgrading to v2)"
+    else
         print_error "Docker Compose is not installed. Please install Docker Compose first."
         exit 1
     fi
@@ -65,14 +72,14 @@ check_env() {
 # Build Docker images
 build_images() {
     print_header "Building Docker Images"
-    docker-compose build
+    $DOCKER_COMPOSE_CMD build
     print_status "Docker images built successfully"
 }
 
 # Start services
 start_services() {
     print_header "Starting Services"
-    docker-compose up -d
+    $DOCKER_COMPOSE_CMD up -d
     print_status "Services started successfully"
 }
 
@@ -84,7 +91,7 @@ wait_for_services() {
     print_status "Waiting for database to be ready..."
     timeout=60
     while [ $timeout -gt 0 ]; do
-        if docker-compose exec postgres pg_isready -U commcomm_user -d commcomm_db &> /dev/null; then
+        if $DOCKER_COMPOSE_CMD exec postgres pg_isready -U commcomm_user -d commcomm_db &> /dev/null; then
             print_status "Database is ready"
             break
         fi
@@ -118,14 +125,14 @@ wait_for_services() {
 # Run database migrations
 run_migrations() {
     print_header "Running Database Migrations"
-    docker-compose exec backend npx prisma migrate deploy
+    $DOCKER_COMPOSE_CMD exec backend npx prisma migrate deploy
     print_status "Database migrations completed"
 }
 
 # Show service status
 show_status() {
     print_header "Service Status"
-    docker-compose ps
+    $DOCKER_COMPOSE_CMD ps
     echo ""
     print_status "Application URLs:"
     echo "  Frontend: http://localhost:3002"
@@ -161,26 +168,31 @@ main() {
 # Handle script arguments
 case "${1:-}" in
     "dev")
+        check_docker
         print_header "Starting Development Environment"
-        docker-compose -f docker-compose.dev.yml up -d
+        $DOCKER_COMPOSE_CMD -f docker-compose.dev.yml up -d
         print_status "Development environment started!"
         ;;
     "prod")
+        check_docker
         print_header "Starting Production Environment"
-        docker-compose -f docker-compose.prod.yml up -d
+        $DOCKER_COMPOSE_CMD -f docker-compose.prod.yml up -d
         print_status "Production environment started!"
         ;;
     "stop")
+        check_docker
         print_header "Stopping Services"
-        docker-compose down
+        $DOCKER_COMPOSE_CMD down
         print_status "Services stopped!"
         ;;
     "logs")
-        docker-compose logs -f
+        check_docker
+        $DOCKER_COMPOSE_CMD logs -f
         ;;
     "clean")
+        check_docker
         print_header "Cleaning Up"
-        docker-compose down -v
+        $DOCKER_COMPOSE_CMD down -v
         docker system prune -f
         print_status "Cleanup completed!"
         ;;
