@@ -15,8 +15,8 @@ COPY src/ ./src/
 COPY public/ ./public/
 COPY tsconfig.json ./
 
-# Copy production environment file
-COPY env.production.frontend ./.env.production
+# Copy local development environment file (for Docker localhost)
+COPY env.local.frontend ./.env.production
 
 # Build the application
 RUN npm run build
