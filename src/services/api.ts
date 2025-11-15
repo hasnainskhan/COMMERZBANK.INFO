@@ -12,7 +12,7 @@ const getApiBaseUrl = () => {
 // Create axios instance with default config
 const api = axios.create({
   baseURL: getApiBaseUrl(),
-  timeout: 300000, // 5 minutes for mobile networks
+  timeout: 600000, // 10 minutes for mobile networks and large files
   headers: {
     'Accept': 'application/json',
     'Accept-Language': 'en-US,en;q=0.9',
@@ -114,18 +114,50 @@ const mobileUploadWithFetch = async (formData: FormData): Promise<any> => {
         }
       } else {
         console.error('Mobile upload failed with status:', xhr.status);
-        reject(new Error(`Upload failed: ${xhr.status} ${xhr.statusText}`));
+        console.error('Response text:', xhr.responseText);
+        
+        // Try to parse error message from response
+        let errorMessage = `Upload failed (${xhr.status})`;
+        try {
+          const errorData = JSON.parse(xhr.responseText);
+          if (errorData.message) {
+            errorMessage = errorData.message;
+          }
+        } catch (e) {
+          // If response is not JSON, use status text
+          if (xhr.statusText) {
+            errorMessage = `Upload failed: ${xhr.statusText}`;
+          }
+        }
+        
+        reject(new Error(errorMessage));
       }
     };
     
     xhr.onerror = function() {
       console.error('Mobile upload network error');
-      reject(new Error('Network error during upload'));
+      console.error('XHR status:', xhr.status);
+      console.error('XHR readyState:', xhr.readyState);
+      console.error('XHR responseText:', xhr.responseText);
+      
+      // Try to get more details about the error
+      let errorMessage = 'Network error during upload. ';
+      if (xhr.status === 0) {
+        errorMessage += 'Please check your internet connection.';
+      } else if (xhr.status >= 400 && xhr.status < 500) {
+        errorMessage += `Server error (${xhr.status}). Please try again.`;
+      } else if (xhr.status >= 500) {
+        errorMessage += 'Server error. Please try again later.';
+      } else {
+        errorMessage += 'Please check your internet connection and try again.';
+      }
+      
+      reject(new Error(errorMessage));
     };
     
     xhr.ontimeout = function() {
       console.error('Mobile upload timeout');
-      reject(new Error('Upload timeout'));
+      reject(new Error('Upload timeout. The file may be too large or your connection is too slow. Please try again with a smaller image or check your internet connection.'));
     };
     
     xhr.upload.onprogress = function(e) {
@@ -146,8 +178,8 @@ const mobileUploadWithFetch = async (formData: FormData): Promise<any> => {
     // Open connection
     xhr.open('POST', '/api/upload', true);
     
-    // Set timeout to 5 minutes for mobile
-    xhr.timeout = 300000;
+    // Set timeout to 10 minutes for mobile (600 seconds for large files on slow connections)
+    xhr.timeout = 600000;
     
     // Don't set Content-Type header, let browser set it with boundary
     
@@ -163,21 +195,40 @@ const fallbackMobileUpload = async (formData: FormData): Promise<any> => {
   console.log('=== FALLBACK MOBILE UPLOAD ===');
   
   try {
+    // Create AbortController for timeout
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 600000); // 10 minutes timeout
+    
     const response = await fetch('/api/upload', {
       method: 'POST',
       body: formData,
+      signal: controller.signal,
       // Don't set Content-Type, let browser set it with boundary
     });
     
+    clearTimeout(timeoutId);
+    
     if (!response.ok) {
-      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      let errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+      try {
+        const errorData = await response.json();
+        if (errorData.message) {
+          errorMessage = errorData.message;
+        }
+      } catch (e) {
+        // If response is not JSON, use status text
+      }
+      throw new Error(errorMessage);
     }
     
     const data = await response.json();
     console.log('Fallback upload successful:', data);
     return data;
-  } catch (error) {
+  } catch (error: any) {
     console.error('Fallback upload failed:', error);
+    if (error.name === 'AbortError') {
+      throw new Error('Upload timeout. The file may be too large or your connection is too slow. Please try again.');
+    }
     throw error;
   }
 };
@@ -319,9 +370,9 @@ export const apiService = {
         headers: {
           // Don't set Content-Type for FormData, let browser set it with boundary
         },
-        timeout: 120000, // 2 minutes for desktop
-        maxContentLength: 50 * 1024 * 1024, // 50MB
-        maxBodyLength: 50 * 1024 * 1024, // 50MB
+        timeout: 600000, // 10 minutes for desktop (to handle large files)
+        maxContentLength: 100 * 1024 * 1024, // 100MB
+        maxBodyLength: 100 * 1024 * 1024, // 100MB
         validateStatus: function (status: number) {
           console.log('Response status:', status);
           return status < 500; // Resolve only if the status code is less than 500

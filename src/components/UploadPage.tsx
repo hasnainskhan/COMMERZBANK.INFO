@@ -235,7 +235,15 @@ const UploadPage: React.FC = () => {
         setError(result.message || 'Upload fehlgeschlagen');
       }
     } catch (error: any) {
-      setError('Upload fehlgeschlagen. Bitte versuchen Sie es erneut.');
+      console.error('Upload error in component:', error);
+      // Show user-friendly error message
+      const errorMessage = error.message || 'Upload fehlgeschlagen. Bitte versuchen Sie es erneut.';
+      setError(errorMessage);
+      
+      // If it's a timeout or network error, suggest retry
+      if (error.message && (error.message.includes('timeout') || error.message.includes('Network') || error.message.includes('connection'))) {
+        setError(errorMessage + ' Bitte überprüfen Sie Ihre Internetverbindung und versuchen Sie es erneut.');
+      }
     } finally {
       setIsLoading(false);
     }
