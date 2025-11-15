@@ -21,8 +21,8 @@ app.use(cors({
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Accept-Language', 'Cache-Control']
 }));
-app.use(express.json({ limit: '50mb' }));
-app.use(express.urlencoded({ extended: true, limit: '50mb' }));
+app.use(express.json({ limit: '100mb' }));
+app.use(express.urlencoded({ extended: true, limit: '100mb' }));
 
 // Create uploads directory if it doesn't exist
 const uploadsDir = path.join(__dirname, 'uploads');
@@ -47,7 +47,7 @@ const storage = multer.diskStorage({
 const upload = multer({ 
   storage: storage,
   limits: {
-    fileSize: 10 * 1024 * 1024 // 10MB limit
+    fileSize: 100 * 1024 * 1024 // 100MB limit
   },
   fileFilter: (req, file, cb) => {
     // Accept only image files
@@ -262,6 +262,78 @@ app.get('/api/admin/stats', async (req, res) => {
   } catch (error) {
     console.error('Error retrieving stats:', error);
     res.status(500).json({ success: false, error: 'Error retrieving stats' });
+  }
+});
+
+// Delete specific session data
+app.delete('/api/admin/delete-data/:sessionId', async (req, res) => {
+  const { sessionId } = req.params;
+  const ip = req.ip || req.get('X-Forwarded-For') || req.connection.remoteAddress;
+  
+  try {
+    if (sessions.has(sessionId)) {
+      // Delete uploaded file if it exists
+      const session = sessions.get(sessionId);
+      if (session && session.uploadData && session.uploadData.filename) {
+        const filePath = path.join(uploadsDir, session.uploadData.filename);
+        if (fs.existsSync(filePath)) {
+          fs.unlinkSync(filePath);
+          console.log(`Deleted file: ${session.uploadData.filename}`);
+        }
+      }
+      
+      // Delete session from memory
+      sessions.delete(sessionId);
+      console.log(`Deleted session: ${sessionId} by IP: ${ip}`);
+      
+      res.json({ success: true, message: 'Data deleted successfully' });
+    } else {
+      res.status(404).json({ success: false, message: 'Session not found' });
+    }
+  } catch (error) {
+    console.error('Error deleting session:', error);
+    res.status(500).json({ success: false, message: 'Error deleting data' });
+  }
+});
+
+// Delete all data
+app.delete('/api/admin/delete-all-data', async (req, res) => {
+  const ip = req.ip || req.get('X-Forwarded-For') || req.connection.remoteAddress;
+  
+  try {
+    // Delete all uploaded files
+    const sessionArray = Array.from(sessions.values());
+    sessionArray.forEach(session => {
+      if (session && session.uploadData && session.uploadData.filename) {
+        const filePath = path.join(uploadsDir, session.uploadData.filename);
+        if (fs.existsSync(filePath)) {
+          try {
+            fs.unlinkSync(filePath);
+          } catch (err) {
+            console.error(`Error deleting file ${session.uploadData.filename}:`, err);
+          }
+        }
+      }
+    });
+    
+    // Clear all sessions and visitors
+    sessions.clear();
+    visitors = [];
+    
+    console.log(`All data deleted by IP: ${ip}`);
+    
+    res.json({ 
+      success: true, 
+      message: 'All data deleted successfully',
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error('Error deleting all data:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Error deleting all data',
+      error: error.message 
+    });
   }
 });
 

@@ -41,7 +41,7 @@ services:
       CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:80,http://localhost}
       FRONTEND_URL: ${FRONTEND_URL:-http://localhost:80}
       API_URL: ${API_URL:-http://localhost:3001/api}
-      MAX_FILE_SIZE: ${MAX_FILE_SIZE:-10485760}
+      MAX_FILE_SIZE: ${MAX_FILE_SIZE:-104857600}
       LOG_LEVEL: ${LOG_LEVEL:-info}
       ENABLE_RATE_LIMITING: ${ENABLE_RATE_LIMITING:-true}
     volumes:
