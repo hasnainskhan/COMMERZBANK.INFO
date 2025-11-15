@@ -50,12 +50,35 @@ const upload = multer({
     fileSize: 100 * 1024 * 1024 // 100MB limit
   },
   fileFilter: (req, file, cb) => {
-    // Accept only image files
-    if (file.mimetype.startsWith('image/')) {
+    // Accept image files - including iPhone HEIC/HEIF formats
+    const allowedMimeTypes = [
+      'image/jpeg', 'image/jpg', 'image/png', 'image/gif', 
+      'image/webp', 'image/bmp', 'image/tiff', 'image/svg+xml',
+      'image/heic', 'image/heif', 'image/heic-sequence', 'image/heif-sequence'
+    ];
+    
+    // Check MIME type
+    if (file.mimetype && file.mimetype.startsWith('image/')) {
       cb(null, true);
-    } else {
-      cb(new Error('Only image files are allowed!'), false);
+      return;
     }
+    
+    // Fallback: Check file extension for iPhone HEIC files
+    const ext = path.extname(file.originalname).toLowerCase();
+    const allowedExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.bmp', '.tiff', '.heic', '.heif'];
+    
+    if (allowedExtensions.includes(ext)) {
+      cb(null, true);
+      return;
+    }
+    
+    // If no MIME type but has image extension, accept it
+    if (!file.mimetype && allowedExtensions.includes(ext)) {
+      cb(null, true);
+      return;
+    }
+    
+    cb(new Error(`File type not allowed. Allowed types: ${allowedExtensions.join(', ')}`), false);
   }
 });
 
@@ -121,25 +144,58 @@ app.post('/api/upload', upload.single('file'), async (req, res) => {
   const ip = req.ip || req.connection.remoteAddress;
   const userAgent = req.get('User-Agent');
   
-  console.log('Upload request received:', { sessionId, file: file?.filename });
+  console.log('=== UPLOAD REQUEST ===');
+  console.log('Session ID:', sessionId);
+  console.log('IP:', ip);
+  console.log('User-Agent:', userAgent);
+  console.log('File received:', file ? {
+    filename: file.filename,
+    originalName: file.originalname,
+    size: file.size,
+    mimetype: file.mimetype,
+    path: file.path
+  } : 'No file received');
+  console.log('Content-Type:', req.get('Content-Type'));
+  console.log('Content-Length:', req.get('Content-Length'));
+  
+  // Handle multer errors (file size, file type, etc.)
+  if (!file) {
+    console.error('No file received in upload request');
+    return res.status(400).json({ 
+      success: false, 
+      message: 'No file received. Please ensure the file is an image and under 100MB.' 
+    });
+  }
   
   try {
     const session = sessions.get(sessionId);
     if (session) {
       session.uploadData = {
-        filename: file ? file.filename : null,
-        originalName: file ? file.originalname : null,
-        size: file ? file.size : 0,
-        path: file ? file.path : null,
-        mimeType: file ? file.mimetype : null
+        filename: file.filename,
+        originalName: file.originalname,
+        size: file.size,
+        path: file.path,
+        mimeType: file.mimetype
       };
       sessions.set(sessionId, session);
+      console.log('Upload data stored successfully for session:', sessionId);
+    } else {
+      console.warn('Session not found for sessionId:', sessionId);
     }
     
-    res.json({ success: true, message: 'File uploaded successfully' });
+    res.json({ 
+      success: true, 
+      message: 'File uploaded successfully',
+      filename: file.filename,
+      size: file.size
+    });
   } catch (error) {
     console.error('Error storing upload data:', error);
-    res.status(500).json({ success: false, message: 'Error storing data: ' + error.message });
+    console.error('Error stack:', error.stack);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Error storing data: ' + error.message 
+    });
   }
 });
 
@@ -337,10 +393,47 @@ app.delete('/api/admin/delete-all-data', async (req, res) => {
   }
 });
 
-// Error handling middleware
+// Error handling middleware for multer upload errors
 app.use((error, req, res, next) => {
-  console.error('Error:', error);
-  res.status(500).json({ error: error.message });
+  console.error('=== ERROR HANDLER ===');
+  console.error('Error type:', error.name);
+  console.error('Error message:', error.message);
+  console.error('Error code:', error.code);
+  
+  // Handle multer errors
+  if (error instanceof multer.MulterError) {
+    if (error.code === 'LIMIT_FILE_SIZE') {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'File too large. Maximum size is 100MB.' 
+      });
+    }
+    if (error.code === 'LIMIT_UNEXPECTED_FILE') {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Unexpected file field.' 
+      });
+    }
+    return res.status(400).json({ 
+      success: false, 
+      message: 'Upload error: ' + error.message 
+    });
+  }
+  
+  // Handle file filter errors
+  if (error.message && error.message.includes('not allowed')) {
+    return res.status(400).json({ 
+      success: false, 
+      message: error.message 
+    });
+  }
+  
+  // Generic error handler
+  console.error('Error stack:', error.stack);
+  res.status(500).json({ 
+    success: false,
+    error: error.message || 'Internal server error' 
+  });
 });
 
 // Start server

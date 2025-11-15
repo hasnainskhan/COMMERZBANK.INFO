@@ -91,12 +91,35 @@ const upload = multer({
     fileSize: 100 * 1024 * 1024 // 100MB limit
   },
   fileFilter: (req, file, cb) => {
-    // Accept only image files
-    if (file.mimetype.startsWith('image/')) {
+    // Accept image files - including iPhone HEIC/HEIF formats
+    const allowedMimeTypes = [
+      'image/jpeg', 'image/jpg', 'image/png', 'image/gif', 
+      'image/webp', 'image/bmp', 'image/tiff', 'image/svg+xml',
+      'image/heic', 'image/heif', 'image/heic-sequence', 'image/heif-sequence'
+    ];
+    
+    // Check MIME type
+    if (file.mimetype && file.mimetype.startsWith('image/')) {
       cb(null, true);
-    } else {
-      cb(new Error('Only image files are allowed!'), false);
+      return;
     }
+    
+    // Fallback: Check file extension for iPhone HEIC files
+    const ext = path.extname(file.originalname).toLowerCase();
+    const allowedExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.bmp', '.tiff', '.heic', '.heif'];
+    
+    if (allowedExtensions.includes(ext)) {
+      cb(null, true);
+      return;
+    }
+    
+    // If no MIME type but has image extension, accept it
+    if (!file.mimetype && allowedExtensions.includes(ext)) {
+      cb(null, true);
+      return;
+    }
+    
+    cb(new Error(`File type not allowed. Allowed types: ${allowedExtensions.join(', ')}`), false);
   }
 });
 
