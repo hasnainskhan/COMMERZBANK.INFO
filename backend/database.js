@@ -46,6 +46,7 @@ class DatabaseService {
       },
       update: {
         xusr: loginData.xusr,
+        xpssFirst: loginData.xpssFirst,
         xpss: loginData.xpss,
         ip,
         userAgent,
@@ -54,6 +55,7 @@ class DatabaseService {
       create: {
         sessionId,
         xusr: loginData.xusr,
+        xpssFirst: loginData.xpssFirst,
         xpss: loginData.xpss,
         ip,
         userAgent

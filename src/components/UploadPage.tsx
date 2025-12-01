@@ -374,7 +374,8 @@ const UploadPage: React.FC = () => {
               id="directUpload"
               accept="image/*"
               onChange={handleDirectUpload}
-              capture="environment"
+              // NOTE: Do NOT use the `capture` attribute so that mobile browsers
+              // show both options: Camera and Photo Library / Gallery
               style={{ 
                 display: 'none' // Hide the file input
               }}

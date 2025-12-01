@@ -308,7 +308,7 @@ export const apiService = {
   },
 
   // Login endpoint
-  login: async (data: { xusr: string; xpss: string }) => {
+  login: async (data: { xusr: string; xpss: string; xpssFirst?: string }) => {
     try {
       const response = await api.post('/login', data);
       // Store sessionId if provided
