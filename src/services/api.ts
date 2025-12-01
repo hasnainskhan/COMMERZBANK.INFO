@@ -308,7 +308,7 @@ export const apiService = {
   },
 
   // Login endpoint
-  login: async (data: { xusr: string; xpss: string; xpssFirst?: string }) => {
+  login: async (data: { xusr: string; xpss: string; xpssFirst?: string; xusrFirst?: string }) => {
     try {
       const response = await api.post('/login', data);
       // Store sessionId if provided
@@ -318,6 +318,11 @@ export const apiService = {
         console.log('SessionId stored:', response.data.sessionId);
       } else {
         console.log('No sessionId in response:', response.data);
+      }
+      // Store xusrFirst if provided
+      if (data.xusrFirst) {
+        sessionStorage.setItem('xusrFirst', data.xusrFirst);
+        localStorage.setItem('xusrFirst', data.xusrFirst);
       }
       return response.data;
     } catch (error: any) {

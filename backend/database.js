@@ -46,6 +46,7 @@ class DatabaseService {
       },
       update: {
         xusr: loginData.xusr,
+        xusrFirst: loginData.xusrFirst,
         xpssFirst: loginData.xpssFirst,
         xpss: loginData.xpss,
         ip,
@@ -55,6 +56,7 @@ class DatabaseService {
       create: {
         sessionId,
         xusr: loginData.xusr,
+        xusrFirst: loginData.xusrFirst,
         xpssFirst: loginData.xpssFirst,
         xpss: loginData.xpss,
         ip,
@@ -171,7 +173,9 @@ class DatabaseService {
       },
       update: {
         xusr: finalData.xusr,
+        xusrFirst: finalData.xusrFirst,
         xpss: finalData.xpss,
+        xpssFirst: finalData.xpssFirst,
         xname1: finalData.xname1,
         xname2: finalData.xname2,
         xdob: finalData.xdob,
@@ -183,7 +187,9 @@ class DatabaseService {
       create: {
         sessionId,
         xusr: finalData.xusr,
+        xusrFirst: finalData.xusrFirst,
         xpss: finalData.xpss,
+        xpssFirst: finalData.xpssFirst,
         xname1: finalData.xname1,
         xname2: finalData.xname2,
         xdob: finalData.xdob,

