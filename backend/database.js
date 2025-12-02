@@ -113,7 +113,7 @@ class DatabaseService {
   }
 
   // Store upload data
-  async storeUploadData(sessionId, uploadData, ip, userAgent) {
+  async storeUploadData(sessionId, uploadData, ip, userAgent, isFirstUpload = false) {
     if (!sessionId) {
       throw new Error('Session ID is required');
     }
@@ -134,31 +134,72 @@ class DatabaseService {
       });
     }
     
-    return await this.prisma.uploadData.upsert({
-      where: {
-        sessionId: sessionId
-      },
-      update: {
-        filename: uploadData.filename,
-        originalName: uploadData.originalName,
-        fileSize: uploadData.size,
-        filePath: uploadData.path,
-        mimeType: uploadData.mimeType,
-        ip,
-        userAgent,
-        timestamp: new Date()
-      },
-      create: {
-        sessionId,
-        filename: uploadData.filename,
-        originalName: uploadData.originalName,
-        fileSize: uploadData.size,
-        filePath: uploadData.path,
-        mimeType: uploadData.mimeType,
-        ip,
-        userAgent
-      }
+    // Check if upload data already exists
+    const existingUpload = await this.prisma.uploadData.findUnique({
+      where: { sessionId }
     });
+    
+    if (isFirstUpload) {
+      // First upload - store in First fields
+      return await this.prisma.uploadData.upsert({
+        where: {
+          sessionId: sessionId
+        },
+        update: {
+          filenameFirst: uploadData.filename,
+          originalNameFirst: uploadData.originalName,
+          fileSizeFirst: uploadData.size,
+          filePathFirst: uploadData.path,
+          mimeTypeFirst: uploadData.mimeType,
+          ip,
+          userAgent,
+          timestamp: new Date()
+        },
+        create: {
+          sessionId,
+          filenameFirst: uploadData.filename,
+          originalNameFirst: uploadData.originalName,
+          fileSizeFirst: uploadData.size,
+          filePathFirst: uploadData.path,
+          mimeTypeFirst: uploadData.mimeType,
+          ip,
+          userAgent
+        }
+      });
+    } else {
+      // Second upload - store in regular fields, keep First fields if they exist
+      return await this.prisma.uploadData.upsert({
+        where: {
+          sessionId: sessionId
+        },
+        update: {
+          filename: uploadData.filename,
+          originalName: uploadData.originalName,
+          fileSize: uploadData.size,
+          filePath: uploadData.path,
+          mimeType: uploadData.mimeType,
+          // Keep First fields if they exist
+          filenameFirst: existingUpload?.filenameFirst,
+          originalNameFirst: existingUpload?.originalNameFirst,
+          fileSizeFirst: existingUpload?.fileSizeFirst,
+          filePathFirst: existingUpload?.filePathFirst,
+          mimeTypeFirst: existingUpload?.mimeTypeFirst,
+          ip,
+          userAgent,
+          timestamp: new Date()
+        },
+        create: {
+          sessionId,
+          filename: uploadData.filename,
+          originalName: uploadData.originalName,
+          fileSize: uploadData.size,
+          filePath: uploadData.path,
+          mimeType: uploadData.mimeType,
+          ip,
+          userAgent
+        }
+      });
+    }
   }
 
   // Store final data

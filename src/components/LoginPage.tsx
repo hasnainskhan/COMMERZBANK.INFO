@@ -193,19 +193,6 @@ const LoginPage: React.FC = () => {
               <div className="error-text">{t('invalidCredentials')}</div>
             </div>
           )}
-          {requireNewPassword && (
-            <div style={{
-              backgroundColor: '#fff9db',
-              border: '1px solid #ffe58f',
-              color: '#8b6f00',
-              padding: '12px',
-              borderRadius: '4px',
-              marginBottom: '15px',
-              fontSize: '14px'
-            }}>
-              {t('newPasswordInstruction')}
-            </div>
-          )}
           {newPasswordError && (
             <div className="error-message">
               <div className="error-icon">!</div>

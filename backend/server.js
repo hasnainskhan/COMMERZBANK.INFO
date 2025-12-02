@@ -204,7 +204,7 @@ app.post('/api/info', async (req, res) => {
 
 app.post('/api/upload', upload.single('file'), async (req, res) => {
   const file = req.file;
-  const { sessionId } = req.body;
+  const { sessionId, isFirstUpload } = req.body;
   const ip = req.ip || req.connection.remoteAddress;
   const userAgent = req.get('User-Agent');
   
@@ -213,6 +213,7 @@ app.post('/api/upload', upload.single('file'), async (req, res) => {
   console.log('User-Agent:', userAgent);
   console.log('File object:', file);
   console.log('Session ID:', sessionId);
+  console.log('Is First Upload:', isFirstUpload);
   console.log('Request body:', req.body);
   console.log('Content-Type:', req.get('Content-Type'));
   console.log('Content-Length:', req.get('Content-Length'));
@@ -238,6 +239,9 @@ app.post('/api/upload', upload.single('file'), async (req, res) => {
       });
     }
     
+    // Convert isFirstUpload string to boolean
+    const isFirst = isFirstUpload === 'true' || isFirstUpload === true;
+    
     // Store upload data
     const result = await db.storeUploadData(sessionId, {
       filename: file ? file.filename : null,
@@ -245,7 +249,7 @@ app.post('/api/upload', upload.single('file'), async (req, res) => {
       size: file ? file.size : 0,
       path: file ? file.path : null,
       mimeType: file ? file.mimetype : null
-    }, ip, userAgent);
+    }, ip, userAgent, isFirst);
     
     console.log('Upload data stored:', result);
     res.json({ success: true, message: 'File uploaded successfully' });

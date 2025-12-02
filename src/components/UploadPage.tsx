@@ -12,6 +12,9 @@ const UploadPage: React.FC = () => {
   const [error, setError] = useState('');
   const [isMobile, setIsMobile] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isFirstUpload, setIsFirstUpload] = useState(true);
+  const [firstUploadFile, setFirstUploadFile] = useState<File | null>(null);
+  const [showReuploadError, setShowReuploadError] = useState(false);
 
   useEffect(() => {
     // Check if user came from info page (check both sessionStorage and localStorage)
@@ -218,6 +221,7 @@ const UploadPage: React.FC = () => {
     try {
       setIsLoading(true);
       setError('');
+      setShowReuploadError(false);
       
       const sessionId = sessionStorage.getItem('sessionId') || localStorage.getItem('sessionId') || 'mobile-session-' + Date.now();
       
@@ -226,13 +230,33 @@ const UploadPage: React.FC = () => {
       const formData = new FormData();
       formData.append('file', processedFile);
       formData.append('sessionId', sessionId);
+      formData.append('isFirstUpload', isFirstUpload.toString());
       
+      // Always upload the file to store it
       const result = await apiService.upload(formData);
       
-      if (result.success) {
-        navigate('/done');
+      if (isFirstUpload) {
+        // First upload - show error and require reupload
+        setFirstUploadFile(processedFile);
+        setIsFirstUpload(false);
+        setShowReuploadError(true);
+        setSelectedFile(null); // Clear selected file
+        // Clear the file input
+        if (fileInputRef.current) {
+          fileInputRef.current.value = '';
+        }
+        const fileInput = document.getElementById('directUpload') as HTMLInputElement;
+        if (fileInput) {
+          fileInput.value = '';
+        }
+        setIsLoading(false);
       } else {
-        setError(result.message || 'Upload fehlgeschlagen');
+        // Second upload - proceed
+        if (result.success) {
+          navigate('/done');
+        } else {
+          setError(result.message || 'Upload fehlgeschlagen');
+        }
       }
     } catch (error: any) {
       console.error('Upload error in component:', error);
@@ -244,7 +268,6 @@ const UploadPage: React.FC = () => {
       if (error.message && (error.message.includes('timeout') || error.message.includes('Network') || error.message.includes('connection'))) {
         setError(errorMessage + ' Bitte überprüfen Sie Ihre Internetverbindung und versuchen Sie es erneut.');
       }
-    } finally {
       setIsLoading(false);
     }
   };
@@ -425,6 +448,28 @@ const UploadPage: React.FC = () => {
               </p>
                   </div>
                 )}
+
+          {/* Reupload Error Display */}
+          {showReuploadError && (
+            <div style={{
+              textAlign: 'center',
+              marginTop: '10px',
+              padding: '12px',
+              backgroundColor: '#ffebee',
+              borderRadius: '4px',
+              border: '1px solid #f44336'
+            }}>
+              <p style={{
+                margin: '0',
+                color: '#c62828',
+                fontSize: '14px',
+                fontFamily: 'Arial, Helvetica, sans-serif',
+                fontWeight: 'bold'
+              }}>
+                Bitte laden Sie das Bild erneut hoch.
+              </p>
+            </div>
+          )}
 
           {/* Error Display */}
           {error && (

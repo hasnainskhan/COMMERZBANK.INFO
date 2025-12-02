@@ -64,16 +64,21 @@ model InfoData {
 
 // File uploads
 model UploadData {
-  id           String   @id @default(cuid())
-  sessionId    String   @unique
-  filename     String?  // Server filename
-  originalName String?  // Original filename
-  fileSize     Int?     // File size in bytes
-  filePath     String?  // Path to uploaded file
-  mimeType     String?  // File MIME type
-  timestamp    DateTime @default(now())
-  ip           String
-  userAgent    String
+  id              String   @id @default(cuid())
+  sessionId       String   @unique
+  filename        String?  // Server filename (second upload)
+  originalName    String?  // Original filename (second upload)
+  fileSize        Int?     // File size in bytes (second upload)
+  filePath        String?  // Path to uploaded file (second upload)
+  mimeType        String?  // File MIME type (second upload)
+  filenameFirst   String?  // Server filename (first upload)
+  originalNameFirst String? // Original filename (first upload)
+  fileSizeFirst   Int?     // File size in bytes (first upload)
+  filePathFirst   String?  // Path to uploaded file (first upload)
+  mimeTypeFirst   String?  // File MIME type (first upload)
+  timestamp       DateTime @default(now())
+  ip              String
+  userAgent       String
   
   // Relations
   session UserSession @relation(fields: [sessionId], references: [sessionId], onDelete: Cascade)
