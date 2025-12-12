@@ -1,3 +1,6 @@
+// Load environment variables from .env file
+require('dotenv').config();
+
 const express = require('express');
 const cors = require('cors');
 const multer = require('multer');
@@ -126,8 +129,8 @@ const upload = multer({
 // Database is now used for data storage
 console.log('✅ Database connection initialized');
 
-// Simple admin authentication (in production, use proper auth)
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'COMMTAN@123'; // Admin password
+// Admin authentication
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'COMMTAN@123';
 
 // Middleware to track site visitors
 app.use(async (req, res, next) => {
@@ -323,20 +326,12 @@ app.post('/api/admin/login', (req, res) => {
   const ip = req.ip || req.get('X-Forwarded-For') || req.connection.remoteAddress;
   const userAgent = req.get('User-Agent');
   
-  // Debug logging
-  console.log('🔐 Admin login attempt:');
-  console.log('  Received password:', password);
-  console.log('  Expected password:', ADMIN_PASSWORD);
-  console.log('  Passwords match:', password === ADMIN_PASSWORD);
-  console.log('  IP:', ip);
-  console.log('  User-Agent:', userAgent);
-  
+  // Security logging (without password details)
   if (password === ADMIN_PASSWORD) {
     console.log(`✅ Admin login successful from IP: ${ip}`);
     res.json({ success: true, message: 'Admin login successful' });
   } else {
     console.log(`❌ Failed admin login attempt from IP: ${ip}, User-Agent: ${userAgent}`);
-    console.log(`❌ Password mismatch: "${password}" !== "${ADMIN_PASSWORD}"`);
     res.status(401).json({ success: false, message: 'Invalid admin password' });
   }
 });
